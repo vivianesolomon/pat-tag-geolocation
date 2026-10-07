@@ -32,7 +32,7 @@ against 122 Argos satellite fixes obtained for the same animal.
 The contribution is not an error number; it is an audit. I hold out the final
 30 days of the ground truth, never using it for any modelling or tuning
 decision, and I repeat every stochastic run over ten seeds.
-Four results follow. First, the best configuration I built reaches
+Six results follow. First, the best configuration I built reaches
 $117$\,\si{\km} median error on the window I tuned on and $544$\,\si{\km} on the
 held-out window, where the proprietary GPE3 smoother reaches
 $118$\,\si{\km}: the headline was a tuning-window number.
@@ -50,7 +50,7 @@ observationally identical to $25$\,\si{\km} of longitude and one minute of
 antisymmetric bias to $112$\,\si{\km} of latitude. Widening the bias family to
 three dimensions and reapplying the same marginal-likelihood rule selects the
 degenerate direction every time and makes tuning-window error four times worse.
-Evidence is maximised exactly where the model is least identifiable. The one
+Evidence is maximised exactly where the model is least identifiable. Sixth, a particle smoother -- the one repair the identifiability result does not forbid, since it adds no parameter -- cuts tuning-window error from $119$ to $69$\,\si{\km} but leaves the held-out error statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}, confirming from the estimator side that what remains is bias and not variance. The one
 estimator that does generalise is the one I did not write.
 \end{abstract}
 
@@ -769,12 +769,125 @@ are worth more here than any filter, smoother or likelihood choice. The producti
 direction for this record was never a better estimator. It was a third independent
 measurement.
 
+\section{Smoothing: Variance Versus Bias}
+\label{sec:smooth}
+
+Section~\ref{sec:ident} closes off the measurement-model repairs: any extra
+parameter that enters through a dawn/dusk pair is already in the span of
+$(\varphi,\lambda)$. Smoothing is the one remaining idea it does not touch,
+because it adds no parameter at all. It only insists that the estimate at time
+$t$ use the observations after $t$ as well as those before.
+
+The prediction is worth stating before the numbers, because it is the whole
+point. A smoother removes variance and lag. It cannot remove a bias in the
+measurement model: if every twilight reports the same distortion, propagating
+that information backwards as well as forwards reports the distortion twice. So
+a large gain is expected on the tuning window, where the Argos fixes are dense
+and the residual error is mostly spread, and little or none on the lockbox,
+where Section~\ref{sec:ident} says the error is structural.
+
+\subsection{Two smoothers, and three things checked before trusting either}
+
+I implement both a forward-filtering backward-simulation smoother (FFBS) and the
+generalised two-filter smoother. They approximate the same marginals by
+different routes, so agreement between them is evidence and disagreement is a
+bug.
+
+The forward pass is the configuration of Section~\ref{sec:fix}: hard seafloor
+set, SST aiding, $12\,000$ particles. To store its full state cloud I patch the
+source of the published filter rather than retyping its loop, so the two cannot
+drift apart; the resulting track is bit-identical to the published one (maximum
+absolute difference $0$). The transition density used backwards is checked
+against $150\,000$ simulated draws of the forward propagation and agrees to
+$3.6\times10^{-15}$.
+
+For the two-filter smoother the artificial prior on velocity is taken to be the
+stationary law of the Ornstein--Uhlenbeck velocity and the backward proposal its
+exact time reversal, which makes the importance ratio
+$\gamma_t(x_t)f(x_{t+1}\mid x_t)/[\gamma_{t+1}(x_{t+1})q(x_t\mid x_{t+1})]$
+identically one. The code measures that ratio rather than trusting the algebra:
+the largest absolute log ratio over all $241$ steps is $1.3\times10^{-12}$.
+Fusion is done between the particle clouds, not between Gaussian summaries of
+them.
+
+\subsection{A large gain on the tuning window, none on the lockbox}
+
+Table~\ref{tab:smooth} gives the result over five seeds. On the tuning window
+the smoother cuts median error from $119.0\pm1.4$ to $68.6\pm4.4$\,\si{\km}, a
+gap of $50.3$\,\si{\km} at $10.9$ standard errors, and the geometric-median
+readout reaches $56.8\pm3.8$\,\si{\km}. This is the largest single improvement
+in the study, and it costs no new parameter and no new data.
+
+On the lockbox the same smoother moves the error from $404.2\pm2.9$ to
+$388.2\pm22.8$\,\si{\km}, a gap of $0.7$ standard errors, which is not a
+difference. The signed error is almost unchanged: $378$\,\si{\km} too far south
+becomes $368$\,\si{\km} too far south. The two smoothers also agree with each
+other to about $1$\,\si{\km} on both windows despite sharing no backward
+machinery, which is the strongest single argument that the number is real.
+
+Three controls support the reading. The answer is flat in the smoothing budget
+($66.5$--$67.3$\,\si{\km} for $K$ from $100$ to $1600$ trajectories), so it is
+not a compute artefact. None of the $96\,400$ smoothed states leaves the hard
+seafloor set, so admissibility survives smoothing by construction rather than by
+luck. And the posterior spread falls to $0.65$ of the filter's while $95\%$
+coverage on the tuning window \emph{rises} from $92.2\%$ to $93.8\%$: the
+intervals get narrower and more honest at the same time. On the lockbox coverage
+is $37.5\%$ before and after, which is the signature of an interval centred in
+the wrong place rather than one that is too narrow.
+
+One stated motivation does not survive. The reason usually given for smoothing
+here is lag, and there is very little lag to remove: shifting the filter's track
+in time buys only $1.6$\,\si{\km}, at a best shift of one day. The improvement
+comes from using future observations to sharpen each marginal.
+
+\begin{table}[t]
+\caption{Filter against smoother, five seeds, median great-circle error in
+\si{\km}, mean $\pm$ standard error. The last column is the median signed
+north error on the lockbox, which is what separates variance from bias. The
+two-filter row is a single-seed cross-check on the same forward pass.}
+\label{tab:smooth}
+\centering
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Estimate & Tune & Lockbox & $\Delta_N$ \\
+\midrule
+Filter, mean       & $119.0\pm1.4$ & $404.2\pm2.9$  & $-378$ \\
+FFBS, mean         & $68.6\pm4.4$  & $388.2\pm22.8$ & $-368$ \\
+FFBS, geom. median & $56.8\pm3.8$  & $412.7\pm18.3$ & $-380$ \\
+Two-filter, mean   & $70.3$        & $357.3$        & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{A reason I had skipped this, and why it was wrong}
+
+An earlier step in the notebook rejected backward simulation on an explicit
+calculation: the position process noise over a median step is about
+$2$\,\si{\km} while the posterior cloud is about $125$\,\si{\km} across, so only
+$\sim3.5$ of $12\,000$ particles lie within one standard deviation of a backward
+target. That arithmetic is correct and I reproduce it: the median effective
+number of ancestors per target is $2.9$.
+
+The conclusion drawn from it was not. Two claims were conflated. That the
+backward weights \emph{underflow} is a statement about floating point, and it
+disappears once the weights are formed in log space with the row maximum
+subtracted. That the sampler \emph{collapses} does not follow at all, because
+each trajectory draws its own ancestor independently; a concentrated weight
+vector pins one trajectory rather than collapsing the ensemble. Measured
+directly, $306$ of $400$ smoothed trajectories remain distinct at the start of
+the record, and Table~\ref{tab:smooth} shows the ensemble is better calibrated
+than the filter it came from. Rejecting the method on that argument cost roughly
+$50$\,\si{\km} of tuning-window accuracy.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
 largest single modelling win in this work --- considerably more than the choice
 of filter, which is worth about $26$\,\si{\km}. Smoothing beats filtering
-consistently for all three estimators. Independent aiding is what breaks the
+consistently for all three estimators, and a particle smoother is the single
+largest improvement in the study: $119.0\pm1.4$ to $68.6\pm4.4$\,\si{\km} on the
+tuning window at $10.9$ standard errors, with the posterior narrowing to $0.65$
+of its former spread while coverage improves (Section~\ref{sec:smooth}). Independent aiding is what breaks the
 equinox degeneracy: SST cuts March error from $522$ to $109$\,\si{\km}, because
 its information is orthogonal to day length rather than because it is more
 accurate. And once a hard constraint makes the posterior multimodal, the readout
@@ -811,7 +924,11 @@ interpret any difference smaller than it; two seeds would have killed most of th
 ladder. And treat calibration support as a first-class check: for every fitted
 sensor parameter, compare the range of its regressors in the calibration window
 against the range expected at deployment. A goodness-of-fit plot cannot show you
-an unidentifiable parameter; a support check can. Above all, before adding any
+an unidentifiable parameter; a support check can. I would also be slower to
+reject a method on a back-of-envelope argument: I skipped backward simulation
+because a correct calculation about weight concentration was attached to an
+incorrect conclusion about ensemble collapse, and that one unchecked inference
+cost about $50$\,\si{\km} (Section~\ref{sec:smooth}). Above all, before adding any
 parameter to a state vector, count observations per epoch against unknowns per
 epoch: that takes a minute and would have told me that the whole of
 Section~\ref{sec:fix} was estimating a quantity the data cannot see.
@@ -840,7 +957,10 @@ same marginal-likelihood rule, given a three-dimensional bias family, prefers th
 degenerate direction in every one of its top configurations and lands a factor of
 four worse on the window it was computed on.
 
-The estimator that generalises here is the one I did not write. The part of this
+A smoother --- the one repair identifiability does not forbid --- then halves
+tuning-window error while leaving held-out error statistically untouched, which
+is the cleanest confirmation available that the residual failure is bias and not
+variance. The estimator that generalises here is the one I did not write. The part of this
 work I would defend is the protocol that let me find that out, and the part I
 would keep is the habit of checking whether a parameter is estimable before
 estimating it.
@@ -853,7 +973,12 @@ redistributed. All seeds are fixed in code. Particle counts are stated with ever
 result: Table~\ref{tab:head} uses $120{,}000$ particles over ten seeds, and
 Tables~\ref{tab:ablate}, \ref{tab:sigb}, \ref{tab:ladder} and
 \ref{tab:grid} use $20{,}000$ particles over three seeds, and the readout
-comparison of Section~\ref{sec:ident} uses five seeds. Absolute values are therefore not comparable
+comparison of Section~\ref{sec:ident} uses five seeds. Table~\ref{tab:smooth}
+uses $12{,}000$ forward particles over five seeds with $400$ smoothed
+trajectories, and the two-filter cross-check adds $3{,}000$ backward particles
+on one seed. The smoother carries two self-checks that run with it: the
+stored-cloud forward filter is asserted bit-identical to the published one, and
+the backward importance ratio is asserted to be one. Absolute values are therefore not comparable
 \emph{between} those two groups, although every comparison \emph{within} a
 table is like-for-like. Table~\ref{tab:main} reports each configuration at the
 particle count at which it was built.
