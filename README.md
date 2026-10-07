@@ -38,7 +38,7 @@ smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
 days I never looked at**. The estimator that generalises here is the one I did
 not write.
 
-## Four things the audit found
+## Five things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -63,6 +63,16 @@ times and +0.89 on the other, two orders of magnitude apart for the same
 physical quantity, because the calibration window spans 0-94 m of twilight depth
 and the lockbox reaches 182 m.
 
+**5. The fix I built could not have worked, for a structural reason.** A day of
+twilight data is exactly two numbers, a dawn time and a dusk time. Position is
+exactly two unknowns. The measurement Jacobian is therefore square, so *any*
+extra parameter entering through those same two numbers is a linear combination
+of a latitude shift and a longitude shift. A threshold bias is confounded with
+position by construction, not by bad luck. Solving for the exchange rate at the
+true positions: **one minute of common-mode bias is observationally identical to
+25.4 km of longitude**, and one minute of antisymmetric bias to 112 km of
+latitude, rising to 390 km/min in March at the equinox.
+
 ### And one fix that failed
 
 The diagnosis is concrete: evaluated at the *true* Argos position, the twilight
@@ -75,6 +85,22 @@ It raised tuning-window 1-sigma coverage from 22% to 38% and left held-out error
 unchanged to worse (+83 km, 2.7 standard errors). It is in the repo because it
 failed. Selecting the same hyperparameter on the lockbox would have let me
 report a 109 km improvement that meant nothing.
+
+Finding 5 explains why. I widened the bias state to three dimensions
+(antisymmetric, common mode, depth coefficient) and re-ran the *identical*
+selection rule over 96 combinations. It picks a common-mode bias every time -
+the dimension that is confounded with longitude - and lands at 1165 km on the
+tuning window against 274 km for no bias state at all. Across all 96
+configurations the rank correlation between tuning-window log evidence and
+tuning-window error is **rho = +0.76**: higher evidence reliably means worse.
+Running the selected filter and correlating its estimated common-mode bias
+against its own signed longitude error gives rho = +0.94. It is not measuring
+the sensor, it is relabelling its own position error.
+
+The lesson I did not have before: *selection hygiene is necessary and not
+sufficient*. A rule that never sees held-out data can still be the wrong rule.
+Mine was safe in the original sweep only because the family was one-dimensional
+and small.
 
 ## Why this problem is hard
 
@@ -92,7 +118,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.pdf                           the report, compiled (7 pp.)
+report/main.pdf                           the report, compiled (8 pp.)
 report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
