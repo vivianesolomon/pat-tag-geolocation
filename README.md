@@ -13,7 +13,7 @@ version of this project claimed did not survive contact with it.
 
 ---
 
-## The result, stated honestly
+## The result
 
 Median great-circle error against Argos, in km. *Tune* is the window I made
 every modelling decision on. *Lock* is the final 30 days, scored once, never
