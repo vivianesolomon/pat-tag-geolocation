@@ -86,11 +86,14 @@ inverse problem is locally rank deficient in latitude. Independent aiding is
 what rescues it: SST cuts the March error from 522 km to 109 km, not because it
 is accurate but because its information is orthogonal to day length.
 
+The compiled report is at [`report/main.pdf`](report/main.pdf).
+
 ## What's in here
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.tex                           IEEE-format technical report
+report/main.pdf                           the report, compiled (7 pp.)
+report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
 
