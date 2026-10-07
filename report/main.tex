@@ -43,9 +43,15 @@ held-out rank only weakly (Spearman $\rho=+0.30$), and the variant that looks
 best while tuning ranks $54$th of $75$ when finally tested. Fourth, the failure
 has an identifiable physical cause, and a one-parameter fix chosen without ever
 touching the held-out data raises tuning-window $1\sigma$ coverage from
-$22\%$ to $38\%$ while leaving held-out error unchanged to worse. I report the
-fix because it failed, and the one estimator that does generalise is the one I
-did not write.
+$22\%$ to $38\%$ while leaving held-out error unchanged to worse. Fifth, and the reason the fix could not have worked, a threshold
+bias is confounded with position by construction: a twilight pair is two numbers
+and position is two unknowns, so one minute of common-mode bias is
+observationally identical to $25$\,\si{\km} of longitude and one minute of
+antisymmetric bias to $112$\,\si{\km} of latitude. Widening the bias family to
+three dimensions and reapplying the same marginal-likelihood rule selects the
+degenerate direction every time and makes tuning-window error four times worse.
+Evidence is maximised exactly where the model is least identifiable. The one
+estimator that does generalise is the one I did not write.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -631,6 +637,138 @@ Depth QC $+$ bias state  & $460.1$ & $921.5$ & $0\%$  & $214$ & $-838$ \\
 \end{tabular}
 \end{table}
 
+\section{Why the Fix Could Not Have Worked}
+\label{sec:ident}
+
+Section~\ref{sec:fix} reports a bias state that improves calibration and not
+accuracy, and I wrote that up as a fix that failed. That is the right description
+of the measurement and the wrong diagnosis. The bias state could not have worked,
+and the reason is structural rather than empirical.
+
+\subsection{The bias is confounded with position by construction}
+A day of twilight data gives exactly two numbers, a dawn time and a dusk time.
+Position has exactly two unknowns. The measurement Jacobian
+$J = \partial(t_\text{dawn}, t_\text{dusk}) / \partial(\varphi, \lambda)$ is
+therefore square, and generically invertible away from the equinox. Any additional
+parameter that enters through those same two numbers lies in the range of $J$: it
+is a linear combination of a latitude shift and a longitude shift, and no quantity
+of twilight data can separate it from one. This is not a weak-identifiability
+statement that more data would fix. It is exact.
+
+The only free question is the exchange rate, which follows from solving
+$J\,\delta = e$ for the position displacement $\delta$ that reproduces a given
+observation perturbation $e$. A common-mode bias is $e = (+1, +1)$ minutes and an
+antisymmetric bias is $e = (+1, -1)$. Table~\ref{tab:ident} evaluates this at the
+interpolated Argos positions, so the rates are physical.
+
+\begin{table}[t]
+\caption{Position displacement that is observationally identical to one minute of
+threshold bias, median by half-month, in \si{\km}. Signed, so the antisymmetric
+column changes sign at the equinox where $\partial(\text{day length})/\partial
+\varphi$ passes through zero. $\kappa$ is the condition number of $J$.}
+\label{tab:ident}
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Month & $n$ & $\kappa$ & \multicolumn{2}{c}{common mode} & antisym. \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-6}
+ &  &  & $\lambda$ & $\varphi$ & $\varphi$ \\
+\midrule
+2008-02 & 23 & $3.5$  & $-23.7$ & $+0.1$ & $+96.8$  \\
+2008-03 & 30 & $14.1$ & $-25.6$ & $+0.1$ & $+245.7$ \\
+2008-04 & 28 & $4.4$  & $-25.5$ & $-0.1$ & $-121.4$ \\
+2008-05 & 21 & $2.4$  & $-25.3$ & $-0.0$ & $-66.0$  \\
+2008-06 &  5 & $1.8$  & $-24.7$ & $-0.0$ & $-48.9$  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Over the record, one minute of common-mode bias is indistinguishable from
+$25.4$\,\si{\km} of longitude, and one minute of antisymmetric bias from
+$112.1$\,\si{\km} of latitude, rising in magnitude to $390$\,\si{\km} per minute in
+March. The $+34$ minute antisymmetric residual of Table~\ref{tab:resid} is
+nominally $3800$\,\si{\km} of latitude; the linearisation is long past valid at that
+size, so the usable content is the direction and not the number. At this exchange
+rate a biased threshold and a displaced animal are the same observation.
+
+\subsection{What happens when the selection rule meets a degenerate direction}
+Section~\ref{sec:fix} selects $\sigma_b$ by tuning-window marginal likelihood and
+never touches the lockbox, and I treated that hygiene as sufficient. It is not.
+I widened the state to three bias dimensions --- antisymmetric $b_a$, common mode
+$b_c$, and a depth coefficient $g$ entering as $g\log(1+z)$ antisymmetrically ---
+and ran the identical selection rule over $96$ combinations of their random-walk
+scales, three seeds each.
+
+\begin{table}[t]
+\caption{Tuning-window marginal likelihood over a three-dimensional bias family,
+three seeds at $20{,}000$ particles. Upper block: the one-dimensional sweep of
+Table~\ref{tab:sigb} re-run through the general code. Lower block: the five
+configurations the evidence criterion actually prefers.}
+\label{tab:grid}
+\centering
+\begin{tabular}{rrrrrrrr}
+\toprule
+$\sigma_a$ & $\sigma_c$ & $\sigma_g$ & $\log Z_\text{tune}$ & Tune & cov$_\text{T}$ & Lock & cov$_\text{L}$ \\
+\midrule
+$0$ & $0$ & $0$ & $-1176.2$ & $273.8$  & $26\%$ & $365.9$ & $20\%$ \\
+$1$ & $0$ & $0$ & $-1087.7$ & $228.4$  & $44\%$ & $594.3$ & $0\%$  \\
+$2$ & $0$ & $0$ & $-1069.5$ & $304.5$  & $34\%$ & $457.6$ & $27\%$ \\
+$3$ & $0$ & $0$ & $-1060.0$ & $324.9$  & $30\%$ & $544.0$ & $13\%$ \\
+$5$ & $0$ & $0$ & $-1061.8$ & $309.6$  & $32\%$ & $414.8$ & $20\%$ \\
+$8$ & $0$ & $0$ & $-1070.3$ & $375.9$  & $19\%$ & $564.4$ & $15\%$ \\
+\midrule
+$1$ & $4$ & $1$ & $\mathbf{-338.0}$ & $1165.5$ & $11\%$ & $864.7$ & $37\%$ \\
+$2$ & $4$ & $1$ & $-340.6$ & $1087.8$ & $12\%$ & $573.0$ & $32\%$ \\
+$3$ & $4$ & $1$ & $-345.9$ & $1069.6$ & $11\%$ & $700.1$ & $37\%$ \\
+$0$ & $4$ & $1$ & $-347.6$ & $1548.7$ & $7\%$  & $884.7$ & $35\%$ \\
+$1$ & $4$ & $2$ & $-348.4$ & $1174.3$ & $12\%$ & $870.7$ & $35\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:grid} is the result. Every configuration the evidence criterion
+prefers switches on the common-mode dimension, the one Table~\ref{tab:ident} shows
+is confounded with longitude at $25$\,\si{\km} per minute. The selected
+configuration scores $1165$\,\si{\km} on the tuning window against $274$\,\si{\km}
+for no bias state at all, a factor of $4.3$ worse on the very window the criterion
+was computed on. Across all $96$ configurations the rank correlation between
+$\log Z_\text{tune}$ and tuning-window error is $\rho = +0.76$
+($p = 4.8 \times 10^{-19}$), and between $\log Z_\text{tune}$ and tuning-window
+coverage it is $\rho = -0.57$. Higher evidence reliably means worse.
+
+The mechanism is not subtle once stated. Marginal likelihood rewards explaining the
+observations. A degenerate direction explains observations perfectly, by absorbing
+whatever residual is left, and pays nothing for it because the data cannot
+contradict it. So evidence is maximised exactly where the model is least
+identifiable.
+
+\subsection{The filter doing it, in one number}
+Running the selected configuration and correlating the estimated common-mode bias
+against the signed longitude error gives Spearman $\rho = +0.94$. The filter is not
+measuring a property of the sensor. It is relabelling its own longitude error as a
+threshold offset, and scoring itself well for the relabelling.
+
+\subsection{Consequences}
+Three, in increasing order of how much they cost me.
+
+The one-parameter fix of Section~\ref{sec:fix} is not a fix that failed, it is a
+parameter that was never estimable from twilight data. Its coverage gain is real
+but it is the honest widening of an interval around an unidentifiable quantity, not
+an improvement in knowledge.
+
+Selection hygiene is necessary and not sufficient. A rule that never sees held-out
+data can still be the wrong rule, and mine was: it was safe in
+Table~\ref{tab:sigb} only because the family was one-dimensional and small. Widen
+the family and the same rule walks straight into the degenerate direction. I would
+now pair any evidence-based selection with an identifiability check on the
+parameters being selected over.
+
+What breaks the degeneracy is information that does not arrive through the twilight
+pair. That is exactly what the SST and seafloor terms are, and it explains why they
+are worth more here than any filter, smoother or likelihood choice. The productive
+direction for this record was never a better estimator. It was a third independent
+measurement.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -641,13 +779,20 @@ equinox degeneracy: SST cuts March error from $522$ to $109$\,\si{\km}, because
 its information is orthogonal to day length rather than because it is more
 accurate. And once a hard constraint makes the posterior multimodal, the readout
 stops being innocent: the same particle cloud reads $364$\,\si{\km} at the
-posterior mean and $452$\,\si{\km} at the local MAP.
+posterior mean and $452$\,\si{\km} at the local MAP. Against four alternatives on
+the same clouds --- marginal mode, weighted geometric median, highest-weight
+particle and a single weighted draw --- the posterior mean is nonetheless the best
+choice on the tuning window, and none of the four beats it out of sample by more
+than its seed noise.
 
 \subsection{What does not}
 The headline, as a measure of accuracy. The ablation ladder, which was built
 below the seed-noise floor. The raw-light recalibration, which improved the
-quantity it was fitted to and tripled the held-out error. And the bias-state fix,
-as an accuracy claim.
+quantity it was fitted to and tripled the held-out error. The bias-state fix, as an accuracy
+claim, and in fact as any kind of estimate: Section~\ref{sec:ident} shows the
+parameter was never identifiable from twilight data. And my own selection rule, as
+a sufficient safeguard --- it is clean, and over a wider family it is actively
+anti-correlated with accuracy.
 
 \subsection{Limitations}
 This is one animal, one deployment, and one ground-truth track. The lockbox
@@ -666,7 +811,10 @@ interpret any difference smaller than it; two seeds would have killed most of th
 ladder. And treat calibration support as a first-class check: for every fitted
 sensor parameter, compare the range of its regressors in the calibration window
 against the range expected at deployment. A goodness-of-fit plot cannot show you
-an unidentifiable parameter; a support check can.
+an unidentifiable parameter; a support check can. Above all, before adding any
+parameter to a state vector, count observations per epoch against unknowns per
+epoch: that takes a minute and would have told me that the whole of
+Section~\ref{sec:fix} was estimating a quantity the data cannot see.
 
 \section{Conclusion}
 Light-level geolocation of this record is dominated not by the choice of
@@ -685,10 +833,17 @@ best-on-tuning variant ranks $54$th of $75$ out of sample. A recalibration that
 halved its own fitting residual tripled held-out error, because the parameter it
 adjusted was never identifiable from the calibration window. And a principled
 one-parameter fix, chosen without ever touching the held-out data, improved
-calibration and not accuracy.
+calibration and not accuracy --- and could not have improved accuracy, because a
+twilight pair is two numbers, position is two unknowns, and a threshold bias is
+therefore a linear combination of the two things it was meant to correct. The
+same marginal-likelihood rule, given a three-dimensional bias family, prefers the
+degenerate direction in every one of its top configurations and lands a factor of
+four worse on the window it was computed on.
 
 The estimator that generalises here is the one I did not write. The part of this
-work I would defend is the protocol that let me find that out.
+work I would defend is the protocol that let me find that out, and the part I
+would keep is the habit of checking whether a parameter is estimable before
+estimating it.
 
 \section*{Reproducibility}
 Everything runs top to bottom in a single Colab notebook with no manual steps.
@@ -696,8 +851,9 @@ The tag archives are fetched at run time from the ATN Data Assembly Center by
 stable UUID, so a cold start gets byte-identical inputs; the raw data are not
 redistributed. All seeds are fixed in code. Particle counts are stated with every
 result: Table~\ref{tab:head} uses $120{,}000$ particles over ten seeds, and
-Tables~\ref{tab:ablate}, \ref{tab:sigb} and \ref{tab:ladder} use $20{,}000$
-particles over three seeds. Absolute values are therefore not comparable
+Tables~\ref{tab:ablate}, \ref{tab:sigb}, \ref{tab:ladder} and
+\ref{tab:grid} use $20{,}000$ particles over three seeds, and the readout
+comparison of Section~\ref{sec:ident} uses five seeds. Absolute values are therefore not comparable
 \emph{between} those two groups, although every comparison \emph{within} a
 table is like-for-like. Table~\ref{tab:main} reports each configuration at the
 particle count at which it was built.
