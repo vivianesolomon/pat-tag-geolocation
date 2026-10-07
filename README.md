@@ -38,7 +38,7 @@ smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
 days I never looked at**. The estimator that generalises here is the one I did
 not write.
 
-## Five things the audit found
+## Six things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -72,6 +72,35 @@ position by construction, not by bad luck. Solving for the exchange rate at the
 true positions: **one minute of common-mode bias is observationally identical to
 25.4 km of longitude**, and one minute of antisymmetric bias to 112 km of
 latitude, rising to 390 km/min in March at the equinox.
+
+**6. Smoothing proves the rest of the error is bias, not variance.** Finding 5
+rules out patching the measurement model, but it says nothing about smoothing,
+which adds no parameter at all - it just lets the estimate at time *t* use the
+observations after *t*. On the same forward pass (hard seafloor set, SST,
+12,000 particles, five seeds) a particle smoother cuts tuning-window error from
+**119.0 +/- 1.4 km to 68.6 +/- 4.4 km**, a gap of 10.9 standard errors and the
+largest single improvement in the project. On the lockbox it does nothing
+measurable: 404.2 +/- 2.9 to 388.2 +/- 22.8 km, 0.7 standard errors, with the
+signed error still ~370 km too far south. A smoother removes variance; it cannot
+remove a bias in the measurement model, and that is exactly the pattern observed.
+
+I ran two smoothers that share no backward machinery - forward-filtering
+backward-simulation, and a generalised two-filter smoother fusing the particle
+clouds rather than Gaussian moments - and they agree to about 1 km on both
+windows. The backward pass is weighted so that its importance ratio is provably
+one, and the code asserts it (largest |log ratio| over 241 steps: 1.3e-12).
+The posterior also narrows to 0.65 of its former spread while 95% coverage on
+the tuning window *rises* from 92.2% to 93.8%; on the lockbox coverage is stuck
+at 37.5% either way, which is what an interval centred in the wrong place looks
+like.
+
+The part I find most useful is that I had already talked myself out of this.
+An earlier step rejected backward simulation after correctly calculating that
+only ~3.5 of 12,000 particles lie within one standard deviation of a backward
+target. The arithmetic was right; the conclusion was not, because each
+trajectory draws its own ancestor, so concentrated weights pin one trajectory
+instead of collapsing the ensemble (306 of 400 trajectories stay distinct).
+One unchecked inference cost 50 km.
 
 ### And one fix that failed
 
@@ -118,7 +147,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.pdf                           the report, compiled (8 pp.)
+report/main.pdf                           the report, compiled (9 pp.)
 report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
