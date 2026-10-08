@@ -32,7 +32,7 @@ against 122 Argos satellite fixes obtained for the same animal.
 The contribution is not an error number; it is an audit. I hold out the final
 30 days of the ground truth, never using it for any modelling or tuning
 decision, and I repeat every stochastic run over ten seeds.
-Six results follow. First, the best configuration I built reaches
+Seven results follow. First, the best configuration I built reaches
 $117$\,\si{\km} median error on the window I tuned on and $544$\,\si{\km} on the
 held-out window, where the proprietary GPE3 smoother reaches
 $118$\,\si{\km}: the headline was a tuning-window number.
@@ -50,7 +50,7 @@ observationally identical to $25$\,\si{\km} of longitude and one minute of
 antisymmetric bias to $112$\,\si{\km} of latitude. Widening the bias family to
 three dimensions and reapplying the same marginal-likelihood rule selects the
 degenerate direction every time and makes tuning-window error four times worse.
-Evidence is maximised exactly where the model is least identifiable. Sixth, a particle smoother -- the one repair the identifiability result does not forbid, since it adds no parameter -- cuts tuning-window error from $119$ to $69$\,\si{\km} but leaves the held-out error statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}, confirming from the estimator side that what remains is bias and not variance. The one
+Evidence is maximised exactly where the model is least identifiable. Sixth, a particle smoother -- the one repair the identifiability result does not forbid, since it adds no parameter -- cuts tuning-window error from $119$ to $69$\,\si{\km} but leaves the held-out error statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}, confirming from the estimator side that what remains is bias and not variance. Seventh, auditing the temperature channel produced a defect rather than an improvement: the quarter-degree sea-surface-temperature analysis returns no value at the animal's own Argos fix on $20\%$ of the days the term fires, and the likelihood mapped those cells to zero probability, deleting the truth; repairing it moves tuning-window mean error from $167$ to $144$\,\si{\km} and the $75$th percentile from $273$ to $191$\,\si{\km} while making the median $20$\,\si{\km} worse, because the repair rotates the error rather than shrinking it. The one
 estimator that does generalise is the one I did not write.
 \end{abstract}
 
@@ -879,6 +879,137 @@ the record, and Table~\ref{tab:smooth} shows the ensemble is better calibrated
 than the filter it came from. Rejecting the method on that argument cost roughly
 $50$\,\si{\km} of tuning-window accuracy.
 
+\section{Temperature: Two Accidental Corrections}
+\label{sec:sst}
+
+Section~\ref{sec:ident} closes the twilight channel and Section~\ref{sec:smooth}
+shows that a smoother removes variance but not bias. The one remaining place to
+look for independent information is the thermometer. The tag reports a surface
+temperature with each dawn, and the pipeline compares it to the NOAA OISST
+quarter-degree daily analysis through a Gaussian likelihood with one fitted bias
+and one fitted standard deviation, thinned to every third day to respect the
+analysis error correlation.
+
+Two files in the same archive had never been opened: a binned depth--temperature
+profile roughly every two hours, and a mixed-layer summary. Neither supplies a
+second position fix. What they supply is a per-day statement of how far the one
+temperature reading can be trusted, and using them turned up a defect rather
+than an improvement.
+
+\subsection{The land mask was deleting the true position}
+
+Evaluating the residual at the \emph{true} Argos position removes the position
+error and leaves the observation model exposed on its own. Done that way, the
+first thing visible is not a noise-model problem at all. On $19$ of the $95$ dawn
+events that carry both a temperature reading and a defensible truth---one fifth
+of them, and $14$ of the $18$ that fall in the lockbox---OISST returns no value
+at the animal's own Argos fix. Seventeen of those nineteen are water according to
+the same bathymetry the seafloor constraint already uses, at a median depth of
+\SI{103}{\metre}. They lie in the Gulf of California, which is narrower than the
+cell the analysis is built on.
+
+The likelihood mapped a missing reference to $-\infty$, reasoning that the animal
+cannot be on land. A gap in OISST does not mean land; it means land to a
+quarter-degree product. Averaged over sampled positions on days when the term
+fires, it was assigning zero probability to $35.3\%$ of the map, the true
+position included. Nothing is lost by treating a missing reference as
+uninformative instead: the hard seafloor set of Section~\ref{sec:fix} already
+rejects land exactly, at far finer resolution, and it is the term that is
+supposed to be doing that job.
+
+\subsection{The tag measures its own reliability}
+
+The published term uses one standard deviation for all $137$ days. Measured
+against the truth on the tuning window the residual spread is
+\SI{1.11}{\celsius} where the filter assumes \SI{0.69}{\celsius}, so the
+temperature term is overconfident by a factor of $1.6$. More useful than the
+average is that the tag predicts its own error. Sorted into quartiles of the
+tag's own mixed-layer depth, the residual spread rises monotonically through
+$0.54$, $0.75$, $1.07$ and \SI{1.69}{\celsius}; a variance model linear in
+mixed-layer depth beats a constant one by $\Delta\mathrm{AIC}=-19.9$ on the
+tuning window. Near-surface stratification does about as well and is
+uncorrelated with calendar time ($r=-0.04$), so this is water-column physics and
+not a drifting sensor. A competing hypothesis died cheaply: the animal reached
+the surface on every single day the term fires, so a story about the tag never
+getting shallow enough explains nothing.
+
+The same geometry that makes a twilight bias unidentifiable applies here. The
+meridional OISST gradient along this track is \SI{1.07}{\celsius} per degree of
+latitude, so one degree of free thermometer bias buys \SI{103}{\km} of free
+latitude. A latent temperature-bias state is therefore the
+Section~\ref{sec:ident} trap in a different channel. A bias regressed on an
+\emph{observed} covariate adds no latent freedom and is the only safe form, and
+it is the only form tested below.
+
+\subsection{Repairing it rotates the error instead of shrinking it}
+
+Table~\ref{tab:sst} runs four versions of the temperature term through the same
+forward filter. Against the published term, treating missing cells as
+uninformative and taking the per-day standard deviation from the mixed-layer
+depth improves the tuning-window mean by \SI{23}{\km}, the RMS by \SI{29}{\km}
+and the $75$th percentile by \SI{82}{\km}, each past ten standard errors---while
+making the median \SI{20}{\km} \emph{worse}. Both statements are true, and which
+one is quoted is a decision about whether a typical day or a bad day matters
+more. This paper has quoted the median almost everywhere, and the median is
+precisely the statistic that cannot see a defect which ruins one day in five.
+
+\begin{table}[t]
+\caption{Four versions of the temperature term through the same forward filter,
+five seeds, great-circle error in \si{\km}. Standard errors are
+$0.5$--$3.8$\,\si{\km} on the tuning columns and $1.7$--$10.6$\,\si{\km} on the
+lockbox mean. P75 is the $75$th percentile.}
+\label{tab:sst}
+\centering
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Temperature term & Med. & Mean & P75 & Lock \\
+\midrule
+As published                & $118.5$ & $166.9$ & $273.1$ & $446.5$ \\
+Missing cell uninformative  & $129.1$ & $145.7$ & $176.8$ & $452.1$ \\
+\quad + per-day $\sigma$    & $138.8$ & $143.8$ & $191.0$ & $450.2$ \\
+\quad + per-day bias        & $161.3$ & $164.2$ & $228.3$ & $481.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The signed error says why the median moved the wrong way. The median
+tuning-window offset goes from \SI{33}{\km} south and \SI{70}{\km} west under the
+published term to \SI{97}{\km} south and \SI{13}{\km} west under the fully
+repaired one, while its magnitude stays between $70$ and \SI{98}{\km}. The error
+does not shrink; it rotates from south-west to very nearly due south. Two defects
+had been cancelling. Deleting every coastal cell acted as an offshore repulsion
+that nobody wrote down, worth about \SI{25}{\km} of eastward error. The
+unmodelled \SI{0.58}{\celsius} cold offset acted as a northward pull: at
+\SI{1.07}{\celsius} per degree of latitude it should be worth \SI{60}{\km}, and
+the observed loss of northward pull when it is modelled away is \SI{64}{\km}.
+Repairing the measurement model honestly removes both accidental corrections and
+exposes the southward twilight bias that Section~\ref{sec:ident} says cannot be
+removed at all.
+
+One further negative is worth recording. The per-day \emph{bias} term is
+preferred by AIC on the observation residual and is worse than the per-day
+standard deviation alone on every filter statistic in Table~\ref{tab:sst}.
+Fitting the residual better is not the same thing as locating the animal better,
+and an information criterion computed on the residual cannot distinguish them.
+
+\subsection{What the repair is worth once you smooth}
+
+Run through the smoother of Section~\ref{sec:smooth} instead of the filter, the
+repair almost vanishes: tuning-window mean error moves from $94.4\pm3.7$ to
+$92.5\pm1.2$\,\si{\km}, half a standard error, with the $75$th percentile
+improving by $14.7\pm6.6$\,\si{\km} and the lockbox mean going the wrong way by
+$20.2\pm9.5$\,\si{\km}. The filter needed the repair because it has only the past
+to work with, and a day on which the truth is deleted is unrecoverable. A
+smoother that can see both directions repairs those days by itself.
+
+The conclusion for the temperature channel is therefore negative in the useful
+sense. It held no untapped accuracy. What it held was an unflagged defect that
+was making the filter wrong in a flattering direction, and the tag's own
+depth--temperature profiles were enough to find it without a single new data
+source. The repair should be adopted anyway, on the grounds that a likelihood
+must not assign probability zero to a place the animal demonstrably was, and not
+on the grounds that it improves a score.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -905,7 +1036,7 @@ quantity it was fitted to and tripled the held-out error. The bias-state fix, as
 claim, and in fact as any kind of estimate: Section~\ref{sec:ident} shows the
 parameter was never identifiable from twilight data. And my own selection rule, as
 a sufficient safeguard --- it is clean, and over a wider family it is actively
-anti-correlated with accuracy.
+anti-correlated with accuracy. And the temperature channel, as a reservoir of further accuracy: Section~\ref{sec:sst} finds a real defect in it --- the satellite analysis has no value at the animal's own position on a fifth of the days the term fires, and the likelihood called those places impossible --- but repairing that defect rotates the error rather than reducing it, and buys nothing that survives smoothing.
 
 \subsection{Limitations}
 This is one animal, one deployment, and one ground-truth track. The lockbox
@@ -931,7 +1062,7 @@ incorrect conclusion about ensemble collapse, and that one unchecked inference
 cost about $50$\,\si{\km} (Section~\ref{sec:smooth}). Above all, before adding any
 parameter to a state vector, count observations per epoch against unknowns per
 epoch: that takes a minute and would have told me that the whole of
-Section~\ref{sec:fix} was estimating a quantity the data cannot see.
+Section~\ref{sec:fix} was estimating a quantity the data cannot see. I would also report more than one error statistic. Almost every number here is a median, and a median cannot see a defect that ruins one day in five: the repair in Section~\ref{sec:sst} improves the mean by \SI{23}{\km} and the $75$th percentile by \SI{82}{\km} while making the median \SI{20}{\km} worse. And I would open every file in the archive before modelling rather than after; the evidence that the temperature term was broken had been sitting in two files the pipeline never read.
 
 \section{Conclusion}
 Light-level geolocation of this record is dominated not by the choice of
@@ -978,7 +1109,7 @@ uses $12{,}000$ forward particles over five seeds with $400$ smoothed
 trajectories, and the two-filter cross-check adds $3{,}000$ backward particles
 on one seed. The smoother carries two self-checks that run with it: the
 stored-cloud forward filter is asserted bit-identical to the published one, and
-the backward importance ratio is asserted to be one. Absolute values are therefore not comparable
+the backward importance ratio is asserted to be one. Table~\ref{tab:sst} uses $12{,}000$ particles over five seeds, and the smoothed comparison of Section~\ref{sec:sst} adds $400$ trajectories on the same five seeds; the modified temperature likelihood carries its own assertion, that it is numerically identical to the published one wherever the satellite analysis has a value, so that any change in the tracks is attributable to the missing cells alone. Every parameter of the temperature model is fitted on the tuning window only. Absolute values are therefore not comparable
 \emph{between} those two groups, although every comparison \emph{within} a
 table is like-for-like. Table~\ref{tab:main} reports each configuration at the
 particle count at which it was built.
