@@ -38,7 +38,7 @@ smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
 days I never looked at**. The estimator that generalises here is the one I did
 not write.
 
-## Six things the audit found
+## Seven things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -102,6 +102,35 @@ trajectory draws its own ancestor, so concentrated weights pin one trajectory
 instead of collapsing the ensemble (306 of 400 trajectories stay distinct).
 One unchecked inference cost 50 km.
 
+**7. A satellite product said "land" where the shark actually was.** The SST
+likelihood compares the tag's dawn temperature to NOAA OISST at each candidate
+position, and it mapped a missing reference value to a log-likelihood of minus
+infinity. On 19 of the 95 scorable dawn events - 20% of them, and 14 of the 18
+in the lockbox - OISST is missing *at the shark's own Argos fix*. Seventeen of
+those nineteen are water by this project's own bathymetry (median depth 103 m):
+they sit in the Gulf of California, where a quarter-degree land mask swallows a
+narrow sea. So on one day in five the filter was assigning the true position
+zero probability, and across the map that term was deleting 35% of all
+candidate positions. A second, smaller defect sits next to it: the residual
+spread on the tuning window is 1.110 C against the filter's assumed 0.689 C,
+and it scales with the tag's own mixed-layer depth (0.54 / 0.75 / 1.07 / 1.69 C
+across MLD quartiles). The tag was recording when to distrust it and I was not
+reading that file.
+
+Fixing both moves the median *up*, 118.5 to 138.8 km, while moving the mean
+down, 166.9 to 143.8 km, and the 75th percentile down hard, 273.1 to 191.0 km
+(3.5 standard errors). The error rotates rather than shrinks. The land mask was
+an unwritten push offshore and the cold reference was a push north, and
+together they were cancelling part of the twilight southward bias; the bearing
+of the median error swings from 245 to 205 degrees. One degree of latitude is
+worth 1.07 C of sea surface temperature along this track, so a free temperature
+offset would buy 103 km of free latitude - Finding 5's confounding arriving
+through a different channel. Under a smoother the whole thing washes out
+(tuning -2.0 km, 0.5 standard errors; lockbox 20 km *worse*). I am reporting it
+because the defect is real, the fix is correct, and the median - the statistic
+this project quotes nearly everywhere - was the one number blind to a flaw that
+ruined one day in five.
+
 ### And one fix that failed
 
 The diagnosis is concrete: evaluated at the *true* Argos position, the twilight
@@ -147,7 +176,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.pdf                           the report, compiled (9 pp.)
+report/main.pdf                           the report, compiled (11 pp.)
 report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
@@ -157,8 +186,9 @@ requirements.txt                          pinned versions for local runs
 Open the notebook in Colab (badge above) and Runtime > Run all. There are no
 manual steps and nothing to upload: the tag archives are fetched at run time
 from the [ATN Data Assembly Center](https://portal.atn.ioos.us/) by stable UUID,
-so a cold start gets byte-identical inputs. A full run is about 75 minutes, most
-of it the ten-seed headline runs at 120,000 particles. Every seed is fixed in
+so a cold start gets byte-identical inputs. A full run is a bit under two hours, most
+of it the ten-seed headline runs at 120,000 particles and the smoother
+experiments. Every seed is fixed in
 code.
 
 Locally:
@@ -208,6 +238,13 @@ win was the likelihood, not the non-Gaussian posterior representation.
   installs the right constants and silently produced numbers three times better
   than they were. The notebook now wraps them in a context manager and opens
   with an equivalence test.
+
+- Open every file in the data archive before modelling, not just the ones the
+  pipeline needs. The vertical temperature profiles that explain the SST
+  heteroscedasticity were sitting unused in the same download for the whole
+  project.
+- Report more than one error statistic. A median hides a defect that ruins a
+  fifth of the days; the mean, the RMS and the 75th percentile all saw it.
 
 ## Data and limitations
 
