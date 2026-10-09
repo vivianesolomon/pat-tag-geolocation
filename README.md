@@ -38,7 +38,12 @@ smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
 days I never looked at**. The estimator that generalises here is the one I did
 not write.
 
-## Seven things the audit found
+One change has been made since that table was built: the process
+noise was fitted on the one month the animal was migrating, and halving it - a
+decision taken on the tuning window alone - moves the forward filter's lockbox
+median from 412 to 313 km. Finding 8 has the details.
+
+## Eight things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -131,6 +136,59 @@ because the defect is real, the fix is correct, and the median - the statistic
 this project quotes nearly everywhere - was the one number blind to a flaw that
 ruined one day in five.
 
+**8. A habitat prior that works better when you invert it.** The last thing on
+my list was the motion model and a weak preference for plausible habitat. Two
+results came out of it and they point in opposite directions.
+
+The first is Finding 2's mistake again, in a parameter I had not thought to
+check. SIGMA_V, the process noise, was fitted on net daily displacement over
+the calibration window. Argos says the animal covered 68 km per root-day in
+that window and 16 km per root-day over the rest of the tuning window, a factor
+of 4.2, because the calibration window is exactly when it was running south
+from Monterey. Letting the motion model run free across the 47 real Argos gaps
+gives a median displacement of 78 km against 32 km observed (KS p < 0.0001),
+and the scale that matches is 0.40. Halving SIGMA_V improves all four
+tuning-window statistics, so it is chosen without the lockbox being touched,
+and it carries: lockbox median 412 -> 313 km.
+
+The second is the one I would lead with. I built a weak habitat prior - the
+seafloor depth under the 91 tuning-window Argos fixes, binned into 18
+log-depth bins, smoothed, added to the log-likelihood with a small weight.
+Eighteen numbers, and nothing in any of them about position. It improved all
+eight statistics at once and took the lockbox median from 433 to 291 km, the
+largest single lockbox gain in the project.
+
+Then I ran the control. Same weight, same machinery, preference *inverted* so
+the prior pushes the animal towards exactly the depths it avoids. It scored
+240 km on the lockbox, better than the correct prior. Three of five randomly
+shuffled priors also beat the published filter by more than 140 km.
+
+The mechanism is confinement, not knowledge. Across the seven priors, how much
+ocean each one deletes correlates with lockbox error at +0.95; hold that fixed
+and how close the prior's centre of mass sits to the animal correlates the
+*wrong* way. Every one of these priors, including the two that help most, has
+its centre of mass more than 1000 km from the animal.
+
+Why that is possible is in the same section. On a 351x351 grid at 0.1 degrees,
+with the filter removed entirely, the best position obtainable from one solar
+day of light and temperature is 372 km from the animal on the tuning window and
+533 km in the lockbox. One day of data rules out most of the ocean and locates
+nothing inside what is left; all the accuracy this project reports comes from
+the motion model stitching a hundred vague days together. When the likelihood
+is that flat, anything that narrows the posterior looks like skill, and the
+only way I found to tell the difference was to build a deliberately wrong
+version of the same term and check whether it worked too.
+
+Combining the two - halved process noise and the depth prior - gives the best
+lockbox numbers in the project by a factor of 2.6 (median 165 km, mean 159 km).
+I am not adopting it. On the tuning window that same configuration has a 99th
+percentile of 872 km and a worst day of 903 km, and its tuning mean and RMS are
+worse than the published filter's: excellent four days in five and badly wrong
+on the fifth. My own rule says choose on the tuning window, so it is rejected.
+The rule that stops me adopting it is the same rule that would have stopped me
+ever finding it, which is a fair statement of what held-out evaluation costs as
+well as what it buys.
+
 ### And one fix that failed
 
 The diagnosis is concrete: evaluated at the *true* Argos position, the twilight
@@ -176,7 +234,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.pdf                           the report, compiled (11 pp.)
+report/main.pdf                           the report, compiled (13 pp.)
 report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
@@ -186,9 +244,9 @@ requirements.txt                          pinned versions for local runs
 Open the notebook in Colab (badge above) and Runtime > Run all. There are no
 manual steps and nothing to upload: the tag archives are fetched at run time
 from the [ATN Data Assembly Center](https://portal.atn.ioos.us/) by stable UUID,
-so a cold start gets byte-identical inputs. A full run is a bit under two hours, most
-of it the ten-seed headline runs at 120,000 particles and the smoother
-experiments. Every seed is fixed in
+so a cold start gets byte-identical inputs. A full run is about two and a half hours,
+most of it the ten-seed headline runs at 120,000 particles and the smoother,
+temperature and prior experiments. Every seed is fixed in
 code.
 
 Locally:
@@ -245,6 +303,13 @@ win was the likelihood, not the non-Gaussian posterior representation.
   project.
 - Report more than one error statistic. A median hides a defect that ruins a
   fifth of the days; the mean, the RMS and the 75th percentile all saw it.
+- Prior-predictive check every fitted process parameter. Simulating the motion
+  model at the real observation gaps and comparing it to the Argos track takes
+  a few lines and never looks at error at all.
+- Run the wrong version of anything that helps. If a term improves a score by
+  shrinking the posterior rather than by adding information, an inverted or
+  shuffled copy of it will improve the score too. That one control is what
+  separated Finding 8's real result from its apparent one.
 
 ## Data and limitations
 
