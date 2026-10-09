@@ -32,7 +32,7 @@ against 122 Argos satellite fixes obtained for the same animal.
 The contribution is not an error number; it is an audit. I hold out the final
 30 days of the ground truth, never using it for any modelling or tuning
 decision, and I repeat every stochastic run over ten seeds.
-Seven results follow. First, the best configuration I built reaches
+Eight results follow. First, the best configuration I built reaches
 $117$\,\si{\km} median error on the window I tuned on and $544$\,\si{\km} on the
 held-out window, where the proprietary GPE3 smoother reaches
 $118$\,\si{\km}: the headline was a tuning-window number.
@@ -50,7 +50,15 @@ observationally identical to $25$\,\si{\km} of longitude and one minute of
 antisymmetric bias to $112$\,\si{\km} of latitude. Widening the bias family to
 three dimensions and reapplying the same marginal-likelihood rule selects the
 degenerate direction every time and makes tuning-window error four times worse.
-Evidence is maximised exactly where the model is least identifiable. Sixth, a particle smoother -- the one repair the identifiability result does not forbid, since it adds no parameter -- cuts tuning-window error from $119$ to $69$\,\si{\km} but leaves the held-out error statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}, confirming from the estimator side that what remains is bias and not variance. Seventh, auditing the temperature channel produced a defect rather than an improvement: the quarter-degree sea-surface-temperature analysis returns no value at the animal's own Argos fix on $20\%$ of the days the term fires, and the likelihood mapped those cells to zero probability, deleting the truth; repairing it moves tuning-window mean error from $167$ to $144$\,\si{\km} and the $75$th percentile from $273$ to $191$\,\si{\km} while making the median $20$\,\si{\km} worse, because the repair rotates the error rather than shrinking it. The one
+Evidence is maximised exactly where the model is least identifiable. Sixth, a particle smoother -- the one repair the identifiability result does not forbid, since it adds no parameter -- cuts tuning-window error from $119$ to $69$\,\si{\km} but leaves the held-out error statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}, confirming from the estimator side that what remains is bias and not variance. Seventh, auditing the temperature channel produced a defect rather than an improvement: the quarter-degree sea-surface-temperature analysis returns no value at the animal's own Argos fix on $20\%$ of the days the term fires, and the likelihood mapped those cells to zero probability, deleting the truth; repairing it moves tuning-window mean error from $167$ to $144$\,\si{\km} and the $75$th percentile from $273$ to $191$\,\si{\km} while making the median $20$\,\si{\km} worse, because the repair rotates the error rather than shrinking it. Eighth, the two remaining knobs behave in opposite
+ways. The process-noise scale was fitted on the one month the animal was
+migrating and is $2.4$ times too large for the rest of the record; halving it
+is selected on tuning data alone and cuts held-out median error from $412$ to
+$313$\,\si{\km}. A weak seafloor-depth habitat prior, by contrast, looks like
+the largest single held-out gain in the study and is then beaten by a
+deliberately inverted copy of itself: across seven such priors what predicts
+the gain is how much ocean each one deletes ($r = +0.95$), not where it
+points. The one
 estimator that does generalise is the one I did not write.
 \end{abstract}
 
@@ -1010,6 +1018,205 @@ source. The repair should be adopted anyway, on the grounds that a likelihood
 must not assign probability zero to a place the animal demonstrably was, and not
 on the grounds that it improves a score.
 
+\section{Process Noise and Habitat Priors}
+\label{sec:prior}
+
+The last item on the list was the motion model and a weak preference for
+plausible habitat. I expected the smallest return of the three and got the
+largest lockbox improvement in the project, attached to a result that does not
+mean what it appears to mean.
+
+\subsection{One day of data cannot find this animal}
+
+Before adding a prior I wanted a number for how much the measurement model
+knows on its own. Both checks below use the $176$ of $241$ events whose true
+position can be defended by interpolation between Argos fixes less than four
+days apart. The hard feasible set contains that position on $98.3\%$ of them,
+so the constraint is not what is hurting.
+
+The first check evaluates the filter's own measurement likelihood---the same
+code, asserted line for line against the body of the filter---at the true
+position and at the filter's answer. The answer scores higher than the truth on
+$51$ to $70\%$ of events depending on the readout and the window, and the
+median log-likelihood gap is $0.01$ to $0.22$. Being \SI{430}{\km} from the
+animal costs about a tenth of a log unit.
+
+The second check deletes the filter. On a $351 \times 351$ grid at
+$0.1\degree$ spacing, $123{,}201$ cells masked to the feasible set, I evaluated
+one solar day of twilight and temperature data at every grid point, for each of
+the $104$ days with defensible truth. The best point on that map lies
+\SI{372.2}{\km} from the animal on the tuning window and \SI{533.2}{\km} in the
+lockbox. The truth sits in the top $1.6\%$ and $11.1\%$ of the map
+respectively, and the set within two log units of the maximum covers $3.7$ to
+$4.7\%$ of the map, several hundred kilometres across.
+
+One day of data therefore rules out most of the ocean and locates nothing
+inside what is left. Every kilometre of accuracy in Table~\ref{tab:main} comes
+from the motion model stitching a hundred vague days together. A prior is not
+competing with the data for influence; there is very little to compete with.
+
+\subsection{The motion model was fitted on the month the animal was migrating}
+
+$\sigma_v$ was set from net daily displacement over the calibration window.
+Splitting the tuning-window Argos fixes at the end of that window shows what
+that choice bought: median displacement is $68.1$\,\si{\km} per root-day over
+the $12$ calibration pairs and $16.2$ over the remaining $34$, a factor of
+$4.2$. The calibration window is exactly the stretch in which the animal ran
+south from Monterey. Over the whole tuning window the figure is $23.8$, and in
+the lockbox, which was not consulted, $28.5$.
+
+A prior-predictive check makes the consequence concrete. Simulating the
+published motion model freely across the $47$ real Argos gaps in the tuning
+window gives a median displacement of \SI{78.4}{\km} against \SI{32.4}{\km}
+observed: a ratio of $2.42$ and a two-sample Kolmogorov--Smirnov statistic of
+$0.349$ ($p < 10^{-4}$). The scale that reproduces the observed median is
+$0.40$; at $0.5$ the ratio is $1.22$ and the test no longer rejects
+($p = 0.083$). The published filter swims about two and a half times too hard.
+
+Table~\ref{tab:sigv} sweeps the scale through the forward filter. Halving
+$\sigma_v$ improves all four tuning-window statistics at once, so it is
+selected without the lockbox being consulted, and it transfers: lockbox median
+error falls from $411.8$ to $312.5$\,\si{\km}. This is the same failure as the
+light threshold in Section~\ref{sec:recal}, a parameter fitted on a window
+whose conditions do not hold for the rest of the deployment, in a parameter I
+had not thought to check.
+
+\begin{table}[t]
+\caption{Process-noise scale swept through the forward filter at $12{,}000$
+particles with the hard feasible set, three seeds, great-circle error in
+\si{\km}. Standard errors are $0.5$--$16.4$\,\si{\km}. The scale is chosen on
+the tuning columns alone.}
+\label{tab:sigv}
+\centering
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+$\sigma_v$ & Med. & Mean & P75 & Lock med. \\
+\midrule
+$\times 0.25$          & $286.7$ & $372.8$ & $590.3$ & $478.5$ \\
+$\times 0.5$           & $99.4$  & $140.1$ & $215.1$ & $312.5$ \\
+$\times 1$ (published) & $117.7$ & $167.0$ & $270.2$ & $411.8$ \\
+$\times 2$             & $179.3$ & $222.1$ & $347.2$ & $588.0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{A weak habitat prior, and the control that ruins it}
+
+The prior is a histogram. I read the seafloor depth under each of the $91$
+tuning-window Argos fixes---quartiles $100$, $331$, $789$, $1379$ and
+$3165$\,\si{\m}, with $62.6\%$ of them over water shallower than
+\SI{1000}{\m}---and binned $\log_{10}$ depth into $18$ bins of width $0.25$, of
+which $9$ are occupied. Laplace smoothing, peak normalised to zero, added to
+the log-likelihood with weight $\lambda$. Eighteen numbers, all of them from
+the tuning window, and nothing in any of them about position.
+
+At $\lambda = 1$ it improves all eight statistics at once
+(Table~\ref{tab:habitat}): tuning median $118.5$ to $83.8$ and lockbox median
+$433.2$ to $290.6$\,\si{\km}. That is the largest single lockbox gain anywhere
+in this study, out of eighteen numbers.
+
+It is also wrong. Keeping the weight and the machinery and changing only the
+contents of the histogram, I inverted the preference so that the prior pushes
+the animal towards exactly the depths it avoids, and separately shuffled the
+bin heights at random five times. The inverted prior beats the correct one on
+the lockbox median, $240.1$ against $290.6$\,\si{\km}. Three of the five
+shuffled priors also beat the published filter by more than \SI{140}{\km}.
+Whatever the depth term is supplying, it is not habitat knowledge.
+
+\begin{table}[t]
+\caption{Same weight ($\lambda = 1$) and the same machinery; only the contents
+of the depth histogram change. Five seeds, $12{,}000$ particles, great-circle
+error in \si{\km}. Standard errors are $1.0$--$38.3$\,\si{\km} on the tuning
+columns and $0.9$--$16.2$\,\si{\km} on the lockbox median.}
+\label{tab:habitat}
+\centering
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Depth prior & Med. & Mean & Lock med. & ESS \\
+\midrule
+None (published)        & $118.5$ & $166.9$ & $433.2$ & $7174$ \\
+Fitted on tuning window & $83.8$  & $111.1$ & $290.6$ & $6272$ \\
+Preference inverted     & $91.5$  & $203.8$ & $240.1$ & $4242$ \\
+Shuffled, draw 0        & $415.5$ & $435.4$ & $585.7$ & $6453$ \\
+Shuffled, draw 1        & $79.1$  & $170.4$ & $290.0$ & $4969$ \\
+Shuffled, draw 2        & $415.5$ & $436.6$ & $586.1$ & $6471$ \\
+Shuffled, draw 3        & $83.2$  & $176.7$ & $255.5$ & $4867$ \\
+Shuffled, draw 4        & $74.5$  & $262.7$ & $271.6$ & $4908$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What the depth term is actually doing}
+
+The mechanism is confinement. For each of the seven depth priors I measured the
+fraction of the ocean it leaves at full weight---its peak-normalised value
+summed over water cells, divided by the number of water cells---and the
+position of its weighted centre of mass. Effective area ranges from $7.2\%$ to
+$63.3\%$, and across the seven priors its correlation with lockbox median error
+is $+0.951$. The correlation with how close the prior's centre of mass sits to
+the animal is $+0.740$, but area and distance are themselves correlated at
+$+0.880$ across these seven; holding distance fixed, the area correlation is
+$+0.940$, and holding area fixed the distance correlation changes sign to
+$-0.667$. Every one of these priors, including the two that help most, has its
+centre of mass more than \SI{1000}{\km} from the animal's mean lockbox
+position. They are not pointing at the animal. They are narrow, and against a
+likelihood as flat as the one measured above, narrow is enough.
+
+The same argument predicts that the two interventions should combine, since
+tightening $\sigma_v$ confines in time and the depth term confines in space.
+Table~\ref{tab:combo} shows that they do, and almost exactly additively:
+together they give a lockbox median of $165.0 \pm 1.2$ and a lockbox mean of
+$158.8 \pm 3.7$\,\si{\km}, against $433.2$ and $446.5$ for the published
+filter. That is the best lockbox accuracy in the project by a factor of $2.6$.
+
+\begin{table}[t]
+\caption{Combining the two interventions. Five seeds, $12{,}000$ particles,
+great-circle error in \si{\km}; standard errors are $1.0$--$7.7$\,\si{\km}. The
+lower panel gives error percentiles pooled over three seeds, and shows what the
+best lockbox row costs on the window that is allowed to select it.}
+\label{tab:combo}
+\centering
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Configuration & Med. & Mean & Lock med. & Lock mean \\
+\midrule
+Neither (published)     & $118.5$ & $166.9$ & $433.2$ & $446.5$ \\
+Depth prior only        & $83.8$  & $111.1$ & $290.6$ & $287.7$ \\
+$\sigma_v$ halved only  & $98.5$  & $138.0$ & $319.1$ & $319.0$ \\
+Both                    & $60.6$  & $205.1$ & $165.0$ & $158.8$ \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Error percentiles, three seeds pooled}} \\
+\cmidrule(r){1-5}
+                   & P50 & P75 & P90 & Max \\
+Published, tuning  & $120$ & $268$ & $329$ & $450$ \\
+Both, tuning       & $61$  & $340$ & $566$ & $903$ \\
+Published, lockbox & $409$ & $581$ & $586$ & $702$ \\
+Both, lockbox      & $165$ & $197$ & $240$ & $271$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What I adopt, and what I only report}
+
+Halving $\sigma_v$ is adopted. It is chosen by the tuning window on all four
+statistics, it has a prior-predictive justification that does not reference
+error at all, and it transfers.
+
+The depth prior is reported and not adopted, because its own control beats it.
+The combination is reported and not adopted for a different reason: on the
+tuning window it has a $99$th percentile of \SI{872}{\km} and a worst day of
+\SI{903}{\km}, and its tuning mean and RMS are worse than the published
+filter's. It is excellent four days in five and badly wrong on the fifth.
+Under this study's own rule---select on the tuning window, score the lockbox
+once---it is rejected. The rule that stops me adopting it is the same rule that
+would have stopped me ever finding it, which is a fair statement of what
+held-out evaluation costs as well as what it buys.
+
+If the measurement model is this flat, anything that shrinks the support will
+look like skill. The only way I found to tell confinement from information was
+to build a deliberately wrong version of the same term and check whether it
+worked too.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -1027,7 +1234,11 @@ posterior mean and $452$\,\si{\km} at the local MAP. Against four alternatives o
 the same clouds --- marginal mode, weighted geometric median, highest-weight
 particle and a single weighted draw --- the posterior mean is nonetheless the best
 choice on the tuning window, and none of the four beats it out of sample by more
-than its seed noise.
+than its seed noise. One process-model parameter does survive on its own
+terms: $\sigma_v$ was fitted on the calibration month, a prior-predictive check
+at the real Argos gaps rejects it at $p<10^{-4}$, and halving it is chosen by
+the tuning window on all four statistics and cuts held-out median error from
+$412$ to $313$\,\si{\km} (Section~\ref{sec:prior}).
 
 \subsection{What does not}
 The headline, as a measure of accuracy. The ablation ladder, which was built
@@ -1036,7 +1247,12 @@ quantity it was fitted to and tripled the held-out error. The bias-state fix, as
 claim, and in fact as any kind of estimate: Section~\ref{sec:ident} shows the
 parameter was never identifiable from twilight data. And my own selection rule, as
 a sufficient safeguard --- it is clean, and over a wider family it is actively
-anti-correlated with accuracy. And the temperature channel, as a reservoir of further accuracy: Section~\ref{sec:sst} finds a real defect in it --- the satellite analysis has no value at the animal's own position on a fifth of the days the term fires, and the likelihood called those places impossible --- but repairing that defect rotates the error rather than reducing it, and buys nothing that survives smoothing.
+anti-correlated with accuracy. And the temperature channel, as a reservoir of further accuracy: Section~\ref{sec:sst} finds a real defect in it --- the satellite analysis has no value at the animal's own position on a fifth of the days the term fires, and the likelihood called those places impossible --- but repairing that defect rotates the error rather than reducing it, and buys nothing that survives smoothing. And the weak habitat prior, as habitat
+knowledge: it produces the largest single held-out gain in the study and is then
+beaten on that same window by a deliberately inverted copy of itself. Across
+seven such priors, how much ocean each one deletes explains the gain
+($r=+0.951$), and where each one points explains none of it once area is held
+fixed (Section~\ref{sec:prior}).
 
 \subsection{Limitations}
 This is one animal, one deployment, and one ground-truth track. The lockbox
@@ -1062,7 +1278,11 @@ incorrect conclusion about ensemble collapse, and that one unchecked inference
 cost about $50$\,\si{\km} (Section~\ref{sec:smooth}). Above all, before adding any
 parameter to a state vector, count observations per epoch against unknowns per
 epoch: that takes a minute and would have told me that the whole of
-Section~\ref{sec:fix} was estimating a quantity the data cannot see. I would also report more than one error statistic. Almost every number here is a median, and a median cannot see a defect that ruins one day in five: the repair in Section~\ref{sec:sst} improves the mean by \SI{23}{\km} and the $75$th percentile by \SI{82}{\km} while making the median \SI{20}{\km} worse. And I would open every file in the archive before modelling rather than after; the evidence that the temperature term was broken had been sitting in two files the pipeline never read.
+Section~\ref{sec:fix} was estimating a quantity the data cannot see. I would also report more than one error statistic. Almost every number here is a median, and a median cannot see a defect that ruins one day in five: the repair in Section~\ref{sec:sst} improves the mean by \SI{23}{\km} and the $75$th percentile by \SI{82}{\km} while making the median \SI{20}{\km} worse. And I would open every file in the archive before modelling rather than after; the evidence that the temperature term was broken had been sitting in two files the pipeline never read. And for anything that
+improves a score by shrinking the posterior rather than by adding information,
+I would build a deliberately wrong version of the same term and check whether it
+works too; that one control is what separated Section~\ref{sec:prior}'s real
+result from its apparent one.
 
 \section{Conclusion}
 Light-level geolocation of this record is dominated not by the choice of
@@ -1091,7 +1311,21 @@ four worse on the window it was computed on.
 A smoother --- the one repair identifiability does not forbid --- then halves
 tuning-window error while leaving held-out error statistically untouched, which
 is the cleanest confirmation available that the residual failure is bias and not
-variance. The estimator that generalises here is the one I did not write. The part of this
+variance.
+
+The last two experiments make the same point from the other side. The
+process-noise scale was fitted on the only month of the record in which the
+animal was migrating; a prior-predictive check that never looks at error says
+it is $2.4$ times too fast for the rest of the deployment, and halving it is
+selected on tuning data and carries to the held-out window. A weak
+seafloor-depth prior does better still, the largest single held-out gain
+anywhere here, and then loses to an inverted copy of itself, because what it
+supplies is not knowledge of where the animal is but a smaller region for it to
+be in. When one solar day of data places its own best estimate
+\SI{372}{\km} from the animal, almost anything that narrows the posterior will
+look like skill.
+
+The estimator that generalises here is the one I did not write. The part of this
 work I would defend is the protocol that let me find that out, and the part I
 would keep is the habit of checking whether a parameter is estimable before
 estimating it.
@@ -1109,7 +1343,13 @@ uses $12{,}000$ forward particles over five seeds with $400$ smoothed
 trajectories, and the two-filter cross-check adds $3{,}000$ backward particles
 on one seed. The smoother carries two self-checks that run with it: the
 stored-cloud forward filter is asserted bit-identical to the published one, and
-the backward importance ratio is asserted to be one. Table~\ref{tab:sst} uses $12{,}000$ particles over five seeds, and the smoothed comparison of Section~\ref{sec:sst} adds $400$ trajectories on the same five seeds; the modified temperature likelihood carries its own assertion, that it is numerically identical to the published one wherever the satellite analysis has a value, so that any change in the tracks is attributable to the missing cells alone. Every parameter of the temperature model is fitted on the tuning window only. Absolute values are therefore not comparable
+the backward importance ratio is asserted to be one. Table~\ref{tab:sst} uses $12{,}000$ particles over five seeds, and the smoothed comparison of Section~\ref{sec:sst} adds $400$ trajectories on the same five seeds; the modified temperature likelihood carries its own assertion, that it is numerically identical to the published one wherever the satellite analysis has a value, so that any change in the tracks is attributable to the missing cells alone. Every parameter of the temperature model is fitted on the tuning window only. Tables~\ref{tab:sigv}, \ref{tab:habitat} and
+\ref{tab:combo} use $12{,}000$ particles, three seeds for the sweeps and five
+for the controlled comparisons; the depth histogram is fitted on tuning-window
+Argos fixes only, the process-noise rescaling is applied through a context
+manager that asserts the global is restored afterwards, and the standalone
+likelihood used for the grid of Section~\ref{sec:prior} is asserted line for
+line against the source of the filter it is meant to reproduce. Absolute values are therefore not comparable
 \emph{between} those two groups, although every comparison \emph{within} a
 table is like-for-like. Table~\ref{tab:main} reports each configuration at the
 particle count at which it was built.
