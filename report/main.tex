@@ -58,8 +58,16 @@ $313$\,\si{\km}. A weak seafloor-depth habitat prior, by contrast, looks like
 the largest single held-out gain in the study and is then beaten by a
 deliberately inverted copy of itself: across seven such priors what predicts
 the gain is how much ocean each one deletes ($r = +0.95$), not where it
-points. The one
-estimator that does generalise is the one I did not write.
+points. Ninth, applying the frozen configuration to six further double-tagged
+animals from the same public archive first exposed two defects that no
+single-animal study can reveal: the seafloor constraint was keyed to the tuned
+animal's timestamps and silently disabled itself on every other shark, and the
+filter's clock was anchored to the tuned animal's release date, which left one
+animal's filter frozen on its release prior for its entire record and gave it
+the lowest error in the study. With both repaired, halving the process noise
+helps all seven animals, by $8$ to $32\%$ in median error, with the tuned
+animal's own numbers unchanged. The only estimator that holds up on both windows is the proprietary one I did
+not write, which I report here as the benchmark to beat.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -1217,6 +1225,110 @@ look like skill. The only way I found to tell confinement from information was
 to build a deliberately wrong version of the same term and check whether it
 worked too.
 
+\section{Does Any of This Transfer?}
+\label{sec:cohort}
+
+Everything above is one animal, which is the first thing anyone should attack.
+The archive these data come from holds $70$ deployments, and seven of those
+animals carried a PAT and a SPOT tag at the same time. Those seven are the only
+animals in the database that can be scored the way 07\_05 was scored, because
+they are the only ones with an independent position while the light tag was
+running.
+
+I ran the frozen configuration on all seven. The threshold $h_0$, the
+attenuation coefficient $\beta$, the twilight noise model, $\sigma_v$ and the
+halving adopted in Section~\ref{sec:prior} are exactly the values 07\_05's
+tuning window produced. Three deployment facts change per animal---release
+time, release location, and the animal's own archival depth record---and
+nothing else. For the six new animals there is no tuning window at all: every
+day is held out, and 07\_05 stays in the table as a control whose numbers must
+not move.
+
+\subsection{Two defects that one animal could not reveal}
+
+The first run of this experiment produced a table I could not defend, and
+chasing why exposed two bugs. Both were silent: no exception, no warning.
+
+The seafloor constraint was the first. \texttt{ZWIN}, the per-twilight maximum
+dive depth that makes a position admissible, was built once as a dictionary
+keyed by 07\_05's timestamps. On any other animal every lookup missed, the
+depth returned not-a-number, the test was skipped, and the feasible set
+degraded silently to ocean-only. Measured directly, the lookup succeeded on
+$95\%$ of 07\_05's twilights and on $0\%$ of every other animal's. The six new
+animals were being scored under a weaker constraint than the animal they were
+being compared against, and I would have reported the gap as a generalisation
+result.
+
+The release epoch was the second and the worse of the two. The filter starts
+its clock at a module-level constant holding 07\_05's deployment date. 07\_03's
+record ends two months \emph{before} that date, so every time increment came
+out negative, the propagation block never executed, and the filter sat frozen
+on its release prior for all $232$ of its twilights. A stationary estimate near
+a release site scored $85$\,\si{\km}, the lowest number anywhere in this study,
+and halving the process noise changed it by exactly zero---identical to fifteen
+significant figures. That zero is the only reason I found the bug. The other
+five animals each received one spurious first step of $135$ to $600$ days;
+09\_15's $600$-day step alone accounted for a $1187$\,\si{\km} median and a
+$483$\,\si{\km} seed spread.
+
+Both repairs have the same shape as the release prior: swap a per-animal
+deployment fact, touch no tuned parameter. The regression test is that 07\_05
+rebuilt through the new per-animal path reproduces the original inline result
+exactly---$241$ events against $241$, maximum absolute difference in observed
+twilight hour $0$, and the same detachment timestamp---and that its scores are
+unchanged to every digit in Table~\ref{tab:cohort}.
+
+\subsection{What transfers}
+
+\begin{table}[t]
+\caption{The frozen configuration on seven double-tagged animals, $8{,}000$
+particles, three seeds, median great-circle error in \si{\km} against each
+animal's own Argos fixes. Only 07\_05 was ever tuned on; for the other six
+every day is held out. Twi.\ is scorable twilights, Fix is matched Argos
+comparisons.}
+\label{tab:cohort}
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Animal & Twi. & Fix & Published & $\sigma_v/2$ & Change \\
+\midrule
+07\_05            & $241$ & $115$ & $364.4 \pm 5.6$  & $333.4 \pm 13.4$ & $-8.5\%$ \\
+07\_03$^{*}$      & $232$ & $140$ & $526.3 \pm 28.9$ & $477.0 \pm 3.6$  & $-9.4\%$ \\
+08\_01            & $169$ & $47$  & $166.3 \pm 0.8$  & $130.4 \pm 2.3$  & $-21.6\%$ \\
+08\_02            & $225$ & $102$ & $162.7 \pm 1.0$  & $135.9 \pm 1.5$  & $-16.4\%$ \\
+08\_04            & $261$ & $148$ & $234.4 \pm 0.9$  & $180.9 \pm 1.3$  & $-22.8\%$ \\
+08\_09            & $261$ & $139$ & $308.8 \pm 1.3$  & $233.3 \pm 1.2$  & $-24.5\%$ \\
+09\_15            & $64$  & $18$  & $212.8 \pm 2.1$  & $143.8 \pm 1.5$  & $-32.4\%$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+\footnotesize $^{*}$No archival record on this tag, so the depth test is off
+for this animal and reported as such rather than hidden.
+\end{table}
+
+Halving the process noise helps all seven animals, by $8.5$ to $32.4\%$ in
+median error with a median of $21.6\%$, and on six of the seven the gap is many
+times the seed-to-seed spread. This is the one intervention in the study that
+was selected on tuning data alone and then held everywhere it was tried. It is
+also the least clever: the process-noise scale was fitted on the single month
+07\_05 was migrating, and the finding is simply that a motion model fitted on
+an animal's fastest month is too loose for every animal's typical month.
+
+Two animals do not deserve three seeds. 07\_03 has no archival record and the
+largest seed spread in the table; 09\_15 contributes only $64$ scorable
+twilights and $18$ matched fixes. Both were re-run with ten seeds before being
+quoted. 07\_03 moves from $526.3 \pm 28.9$ to $516.2 \pm 30.5$\,\si{\km}
+published and sits at $477.0 \pm 2.4$\,\si{\km} halved; 09\_15 moves from
+$212.8 \pm 2.1$ to $212.6 \pm 1.8$ and from $143.8 \pm 1.5$ to
+$143.9 \pm 2.0$. Both conclusions hold.
+
+What this does not show is that the method is competitive. Six of seven medians
+sit between $130$ and $330$\,\si{\km}, well above the $118$\,\si{\km} the
+proprietary smoother reaches on 07\_05. The transferable result is about the
+process model, not about the estimator.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -1255,7 +1367,9 @@ seven such priors, how much ocean each one deletes explains the gain
 fixed (Section~\ref{sec:prior}).
 
 \subsection{Limitations}
-This is one animal, one deployment, and one ground-truth track. The lockbox
+The diagnostic work is one animal, one deployment, and one ground-truth track;
+only the process-noise result of Section~\ref{sec:cohort} has been tested on
+more. The lockbox
 contains $20$ matched events, so lockbox medians carry wide intervals --- the
 seed standard deviation alone is $90$\,\si{\km}, and sampling error on $20$
 events is comparable. Nothing here should be read as a general ranking of
@@ -1323,9 +1437,14 @@ anywhere here, and then loses to an inverted copy of itself, because what it
 supplies is not knowledge of where the animal is but a smaller region for it to
 be in. When one solar day of data places its own best estimate
 \SI{372}{\km} from the animal, almost anything that narrows the posterior will
-look like skill.
+look like skill. None of this says habitat information is worthless; it says
+this particular prior earned its gain by shrinking the feasible area, so any
+habitat term has to be scored against a deliberately wrong copy of itself
+before it is credited with anything.
 
-The estimator that generalises here is the one I did not write. The part of this
+The estimator that generalises best here is still the proprietary one, and I
+would rather treat that as the benchmark to beat than as a verdict on
+light-based geolocation. The part of this
 work I would defend is the protocol that let me find that out, and the part I
 would keep is the habit of checking whether a parameter is estimable before
 estimating it.
