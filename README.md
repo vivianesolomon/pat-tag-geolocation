@@ -43,7 +43,7 @@ noise was fitted on the one month the animal was migrating, and halving it - a
 decision taken on the tuning window alone - moves the forward filter's lockbox
 median from 412 to 313 km. Finding 8 has the details.
 
-## Eight things the audit found
+## Nine things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -189,6 +189,50 @@ The rule that stops me adopting it is the same rule that would have stopped me
 ever finding it, which is a fair statement of what held-out evaluation costs as
 well as what it buys.
 
+**9. Everything above is one animal, and running it on six more broke it twice
+before it worked.** The same public archive holds seven double-tagged animals,
+which are the only ones that can be scored the way this one was. I applied the
+frozen configuration to all seven, changing nothing but three deployment facts
+per animal: release time, release location, and that animal's own depth record.
+
+The first attempt was wrong in two ways that a single-animal study cannot
+expose. The seafloor constraint was a dictionary keyed by the tuned animal's
+timestamps, so on every other animal every lookup missed and the depth test
+silently switched itself off: 95% of lookups resolved on 07_05, 0% on all six
+others. Worse, the filter's clock started at a constant holding the tuned
+animal's release date, and 07_03's record ends two months *before* that date,
+so every time step came out negative, the propagation block never ran, and the
+filter sat frozen on its release prior for all 232 of its twilights. That
+frozen filter scored 85 km, the best number anywhere in this project, and
+halving the process noise changed it by exactly zero. The zero is the only
+reason I found it.
+
+With both fixed, halving the process noise helps **all seven animals**, by 8.5%
+to 32.4% in median error (median 21.6%), and on six of the seven the gap is
+many times the seed spread. 07_05's own numbers are bit-identical before and
+after, which is the regression test that the per-animal path did not quietly
+change the special case it replaced. The two thinnest animals were re-run at
+ten seeds before being quoted, and both held.
+
+| Animal | Twilights | Argos fixes | Published | sigma_v/2 | Change |
+|---|---:|---:|---:|---:|---:|
+| 07_05 | 241 | 115 | 364.4 ± 5.6 | 333.4 ± 13.4 | −8.5% |
+| 07_03* | 232 | 140 | 526.3 ± 28.9 | 477.0 ± 3.6 | −9.4% |
+| 08_01 | 169 | 47 | 166.3 ± 0.8 | 130.4 ± 2.3 | −21.6% |
+| 08_02 | 225 | 102 | 162.7 ± 1.0 | 135.9 ± 1.5 | −16.4% |
+| 08_04 | 261 | 148 | 234.4 ± 0.9 | 180.9 ± 1.3 | −22.8% |
+| 08_09 | 261 | 139 | 308.8 ± 1.3 | 233.3 ± 1.2 | −24.5% |
+| 09_15 | 64 | 18 | 212.8 ± 2.1 | 143.8 ± 1.5 | −32.4% |
+
+Median great-circle error in km, 8,000 particles, three seeds, scored against
+each animal's own Argos fixes. Only 07_05 was ever tuned on. \* no archival
+record on this tag, so the depth test is off for it and reported as off.
+
+This is not a claim that the method is competitive — six of seven medians sit
+between 130 and 330 km, against 118 km for the proprietary smoother on 07_05.
+It is a claim about the process model: a motion model fitted on an animal's
+fastest month is too loose for every animal's typical month.
+
 ### And one fix that failed
 
 The diagnosis is concrete: evaluated at the *true* Argos position, the twilight
@@ -313,13 +357,14 @@ win was the likelihood, not the non-Gaussian posterior representation.
 
 ## Data and limitations
 
-Tag data for deployment `07_05` are published through the Animal Telemetry
+Tag data for all seven deployments are published through the Animal Telemetry
 Network Data Assembly Center and are **not redistributed here**; the notebook
 downloads them. GPE3 reference tracks were produced by the tag manufacturer's
 software and are treated as an external black-box baseline.
 
-This is one animal, one deployment, one ground-truth track. The lockbox holds 20
-matched events, so its medians carry wide intervals. Nothing here is a general
+The diagnostic work is one animal, one deployment, one ground-truth track; only
+the process-noise result (finding 9) has been tested on more. The lockbox holds
+20 matched events, so its medians carry wide intervals. Nothing here is a general
 ranking of nonlinear filters; it is a statement about what this data set can
 resolve, which is less than I first claimed.
 
