@@ -32,7 +32,7 @@ against 122 Argos satellite fixes obtained for the same animal.
 The contribution is not an error number; it is an audit. I hold out the final
 30 days of the ground truth, never using it for any modelling or tuning
 decision, and I repeat every stochastic run over ten seeds.
-Eight results follow. First, the best configuration I built reaches
+Ten results follow. First, the best configuration I built reaches
 $117$\,\si{\km} median error on the window I tuned on and $544$\,\si{\km} on the
 held-out window, where the proprietary GPE3 smoother reaches
 $118$\,\si{\km}: the headline was a tuning-window number.
@@ -66,7 +66,16 @@ filter's clock was anchored to the tuned animal's release date, which left one
 animal's filter frozen on its release prior for its entire record and gave it
 the lowest error in the study. With both repaired, halving the process noise
 helps all seven animals, by $8$ to $32\%$ in median error, with the tuned
-animal's own numbers unchanged. The only estimator that holds up on both windows is the proprietary one I did
+animal's own numbers unchanged. Tenth, the temperature channel had never been tested on more than one animal:
+the gridded reference field was downloaded for the tuned animal's deployment
+window only, so $149$ of the cohort's $1052$ dawn temperature readings had
+anything to compare against and three of the seven animals had none at all.
+Extending the field over the full cohort and correcting a missing-data rule
+that treated an absent reference as an impossible position rather than as no
+information improves all seven animals, by $2.6$ to $52.3\%$ in median error
+and on every animal in mean and RMS error as well. That is the largest effect
+in the study that transfers, and it is not an estimator result.
+The only estimator that holds up on both windows is the proprietary one I did
 not write, which I report here as the benchmark to beat.
 \end{abstract}
 
@@ -1329,6 +1338,106 @@ sit between $130$ and $330$\,\si{\km}, well above the $118$\,\si{\km} the
 proprietary smoother reaches on 07\_05. The transferable result is about the
 process model, not about the estimator.
 
+\section{A Reference Field That Covered One Animal}
+\label{sec:sstcohort}
+
+Section~\ref{sec:cohort} found two constants frozen to 07\_05. This is the
+third, and it was in the data rather than in the code.
+
+The temperature likelihood needs a gridded reference field. The one fetched for
+Section~\ref{sec:sst} was requested for exactly the window needed at the
+time---2008-02-01 to 2008-06-30, which is 07\_05's deployment and nothing
+else. Every line built on top of it is correct; it simply had nothing to read
+for any other animal. Of the $1052$ dawn events in the cohort that carry a tag
+temperature, $149$ fall inside that cube, and three of the seven animals have
+no reference data at any point in their record. The seven-animal table of
+Section~\ref{sec:cohort} is therefore scored with the temperature channel
+switched off. That is stated there, so the table is not wrong, but it measures
+the filter with the one observable that carries latitude withheld.
+
+Re-requesting the same dataset over the same spatial box for 2007-07 to
+2010-03 raises coverage to $1052/1052$. The old and the new cube agree to
+better than $10^{-9}$ wherever they overlap and their missing-data masks agree
+exactly, so no number already reported moves.
+
+\subsection{A missing reference value is ignorance, not impossibility}
+
+The shipped likelihood maps a missing reference to $-\infty$: the animal was in
+the water, so a land cell is impossible. Inside a cube that covered the animal
+this is nearly harmless. Across the cohort it is wrong twice over. A missing
+value means either that the $0.25^{\circ}$ land mask removed the cell---and the
+feasible set already excludes land, so scoring it here counts the same evidence
+a second time---or that the particle is off the cube, which is ignorance rather
+than impossibility. Roughly half of a plausible cloud lands on such a cell:
+sampling a $3^{\circ}$ Gaussian around each release point gives
+missing-reference fractions of $0.49$ to $0.57$ across the seven animals.
+Declaring that half impossible never trips the collapse counter, because the
+filter has a fallback, but it empties the cloud: at the worst step the
+effective sample size falls to $4$ particles out of $8{,}000$ on 07\_05 and
+$6$ on 08\_09, against $48$ and $189$ under the corrected rule. The honest
+increment for a missing reference is zero.
+
+\subsection{A per-tag offset cannot be estimated without the answer}
+
+Each tag's temperature sensor has its own offset, and the one in use was
+calibrated on 07\_05. The only way to estimate a per-tag offset without reading
+an Argos fix is to compare the tag against the reference at the known release
+position for the first few days of the record. That estimator recovers the
+offset obtained with access to the truth with a mean absolute error of
+$0.85$\,\si{\celsius} and a correlation of $0.23$, against
+$0.26$\,\si{\celsius} for simply reusing the frozen constant. Scoring it
+confirms the prediction: it helps 07\_03 and 08\_01 and costs 08\_04 and 09\_15
+$19$ and $30\%$ respectively. The oracle version, fitted on each animal's own
+Argos fixes and therefore not a result I am entitled to quote, buys under
+$6\%$ beyond the frozen constant on five of the seven animals and $11$ to
+$13\%$ on the other two. Per-tag temperature calibration is not where the
+remaining error is.
+
+\subsection{What temperature is worth across the cohort}
+
+\begin{table}[t]
+\caption{Temperature aiding transferred to the cohort. Frozen 07\_05
+calibration---same noise scale, same offset, same three-day thinning---with the
+corrected missing-data rule and no other change. $8{,}000$ particles, three
+seeds, median great-circle error in \si{\km} against each animal's own Argos
+fixes. The no-SST column is the $\sigma_v/2$ column of
+Table~\ref{tab:cohort}. $^{\dagger}$ marks the animal the calibration was
+fitted on; the other six are the generalisation evidence.}
+\label{tab:sstcohort}
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Animal & Fix & No SST & With SST & Change \\
+\midrule
+07\_05$^{\dagger}$ & $115$ & $333.4 \pm 13.4$ & $159.1 \pm 3.3$  & $-52.3\%$ \\
+07\_03             & $140$ & $477.0 \pm 3.6$  & $401.5 \pm 12.8$ & $-15.8\%$ \\
+08\_01             & $47$  & $130.4 \pm 2.3$  & $80.6 \pm 0.8$   & $-38.1\%$ \\
+08\_02             & $102$ & $135.9 \pm 1.5$  & $107.6 \pm 0.9$  & $-20.9\%$ \\
+08\_04             & $148$ & $180.9 \pm 1.3$  & $176.2 \pm 1.4$  & $-2.6\%$ \\
+08\_09             & $139$ & $233.3 \pm 1.2$  & $199.9 \pm 4.6$  & $-14.3\%$ \\
+09\_15             & $18$  & $143.8 \pm 1.5$  & $72.2 \pm 1.7$   & $-49.8\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sstcohort} is the result. All seven animals improve in median,
+mean and RMS error. Across the six animals that were never tuned on, the median
+improvement is $18.4\%$; including 07\_05 it is $20.9\%$. 07\_05 falls from
+$333$ to $159$\,\si{\km} and 09\_15 from $144$ to $72$\,\si{\km}. The three
+animals most likely to be reporting noise---07\_05 because it moved furthest,
+08\_04 because it barely moved, 09\_15 because it has only $18$ matched
+fixes---were re-run with ten seeds, and each reproduces its three-seed
+conclusion: $328.0 \pm 15.1$ to $148.5 \pm 14.6$, $179.2 \pm 1.3$ to
+$175.2 \pm 1.4$, and $142.5 \pm 0.9$ to $72.8 \pm 4.1$\,\si{\km}.
+
+The weakest entry is 08\_04 at $-2.6\%$, about three times its seed spread and
+the only animal whose $75$th percentile moves the wrong way ($229$ to
+$247$\,\si{\km}). I do not count it as a win. The honest summary is that the
+observable which carries latitude was being withheld from six of seven animals
+by the extent of a downloaded file, and that restoring it is worth more than
+any change I made to the estimator.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -1368,8 +1477,8 @@ fixed (Section~\ref{sec:prior}).
 
 \subsection{Limitations}
 The diagnostic work is one animal, one deployment, and one ground-truth track;
-only the process-noise result of Section~\ref{sec:cohort} has been tested on
-more. The lockbox
+only the process-noise result of Section~\ref{sec:cohort} and the temperature
+result of Section~\ref{sec:sstcohort} have been tested on more. The lockbox
 contains $20$ matched events, so lockbox medians carry wide intervals --- the
 seed standard deviation alone is $90$\,\si{\km}, and sampling error on $20$
 events is comparable. Nothing here should be read as a general ranking of
