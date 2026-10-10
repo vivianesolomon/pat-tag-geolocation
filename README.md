@@ -43,7 +43,7 @@ noise was fitted on the one month the animal was migrating, and halving it - a
 decision taken on the tuning window alone - moves the forward filter's lockbox
 median from 412 to 313 km. Finding 8 has the details.
 
-## Nine things the audit found
+## Ten things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -233,6 +233,82 @@ between 130 and 330 km, against 118 km for the proprietary smoother on 07_05.
 It is a claim about the process model: a motion model fitted on an animal's
 fastest month is too loose for every animal's typical month.
 
+**10. The temperature channel had only ever been switched on for one animal.**
+The likelihood needs a gridded sea-surface-temperature field, and the one I
+fetched was requested for exactly the window I needed at the time — 2008-02-01
+to 2008-06-30, which is 07_05's deployment and nothing else. Every line built on
+top of it is correct; it simply had nothing to read for any other animal. Of the
+1,052 dawn events in the cohort that carry a tag temperature, 149 fall inside
+that cube, and three of the seven animals have no reference value at any point
+in their record. The seven-animal table above is therefore scored with the
+temperature channel off — which is stated there, so the table is not wrong, but
+it measures the filter with the one observable that carries latitude withheld.
+
+Re-requesting the same dataset over the same spatial box for 2007-07 to 2010-03
+raises coverage to 1,052/1,052. The old and new cubes agree to better than 1e-9
+wherever they overlap and their missing-data masks match exactly, so no number
+I had already reported moves.
+
+The second half of the fix is the missing-data rule. The likelihood I shipped
+maps a missing reference to -inf: the animal is in the water, so a land cell is
+impossible. Inside a cube that covered the animal that is nearly harmless.
+Across the cohort it is wrong twice over — either the 0.25° land mask removed
+the cell, and the feasible set already excludes land, so scoring it again counts
+the same evidence twice; or the particle is off the cube, which is ignorance,
+not impossibility. About half of a plausible cloud lands on such a cell
+(missing-reference fraction 0.49 to 0.57 across the seven animals). Declaring
+that half impossible never trips the collapse counter, because the filter has a
+fallback, but it quietly empties the cloud: at the worst step the effective
+sample size falls to 4 particles out of 8,000 on 07_05 and 6 on 08_09, against
+48 and 189 under the corrected rule. The honest increment for a missing
+reference is zero.
+
+With the full field and the corrected rule, and with the 07_05 calibration
+frozen — same noise scale, same offset, same three-day thinning, nothing else
+changed:
+
+| Animal | Argos fixes | No SST | With SST | Change |
+|---|---:|---:|---:|---:|
+| 07_05† | 115 | 333.4 ± 13.4 | 159.1 ± 3.3 | −52.3% |
+| 07_03 | 140 | 477.0 ± 3.6 | 401.5 ± 12.8 | −15.8% |
+| 08_01 | 47 | 130.4 ± 2.3 | 80.6 ± 0.8 | −38.1% |
+| 08_02 | 102 | 135.9 ± 1.5 | 107.6 ± 0.9 | −20.9% |
+| 08_04 | 148 | 180.9 ± 1.3 | 176.2 ± 1.4 | −2.6% |
+| 08_09 | 139 | 233.3 ± 1.2 | 199.9 ± 4.6 | −14.3% |
+| 09_15 | 18 | 143.8 ± 1.5 | 72.2 ± 1.7 | −49.8% |
+
+Median great-circle error in km, 8,000 particles, three seeds, scored against
+each animal's own Argos fixes. The *No SST* column is the sigma_v/2 column of
+the table above. † marks the animal the calibration was fitted on; the other six
+are the generalisation evidence.
+
+All seven improve in median, mean and RMS error. Across the six animals never
+tuned on, the median improvement is 18.4%; including 07_05 it is 20.9%. The
+three most likely to be reporting noise — 07_05 because it moved furthest,
+08_04 because it barely moved, 09_15 because it has only 18 matched fixes —
+were re-run with ten seeds and each reproduced its three-seed conclusion.
+The weakest entry is 08_04 at −2.6%, about three times its seed spread, and the
+only animal whose 75th percentile moves the wrong way (229 to 247 km). I do not
+count it as a win.
+
+I also tried to earn the per-tag part of the calibration honestly. Each tag's
+sensor has its own offset and mine was fitted on 07_05; the only way to estimate
+a new one without reading an Argos fix is to compare tag against reference at
+the known release position for the first few days. That estimator recovers the
+offset you would get with access to the truth with a mean absolute error of
+0.85 °C and a correlation of 0.23 — against 0.26 °C for simply reusing the
+frozen constant. Scoring it confirms the diagnosis: it costs 08_04 19% and
+09_15 30%. Doing nothing beats estimating it. The oracle version, fitted on each
+animal's own Argos fixes and therefore not a result I am entitled to quote, buys
+under 6% beyond the frozen constant on five animals and 11–13% on the other two.
+Per-tag temperature calibration is not where the remaining error is.
+
+The honest summary is that the observable carrying latitude was being withheld
+from six of seven animals by the extent of a downloaded file, and that restoring
+it is worth more than any change I made to the estimator. The headline tune/lock
+table at the top of this README is unchanged: the corrected rule was evaluated
+across the cohort, not re-scored on the single-animal lockbox split.
+
 ### And one fix that failed
 
 The diagnosis is concrete: evaluated at the *true* Argos position, the twilight
@@ -363,7 +439,8 @@ downloads them. GPE3 reference tracks were produced by the tag manufacturer's
 software and are treated as an external black-box baseline.
 
 The diagnostic work is one animal, one deployment, one ground-truth track; only
-the process-noise result (finding 9) has been tested on more. The lockbox holds
+the process-noise result (finding 9) and the temperature-field result
+(finding 10) have been tested on more. The lockbox holds
 20 matched events, so its medians carry wide intervals. Nothing here is a general
 ranking of nonlinear filters; it is a statement about what this data set can
 resolve, which is less than I first claimed.
