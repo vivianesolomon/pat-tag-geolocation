@@ -32,7 +32,7 @@ against 122 Argos satellite fixes obtained for the same animal.
 The contribution is not an error number; it is an audit. I hold out the final
 30 days of the ground truth, never using it for any modelling or tuning
 decision, and I repeat every stochastic run over ten seeds.
-Ten results follow. First, the best configuration I built reaches
+Eleven results follow. First, the best configuration I built reaches
 $117$\,\si{\km} median error on the window I tuned on and $544$\,\si{\km} on the
 held-out window, where the proprietary GPE3 smoother reaches
 $118$\,\si{\km}: the headline was a tuning-window number.
@@ -75,6 +75,14 @@ that treated an absent reference as an impossible position rather than as no
 information improves all seven animals, by $2.6$ to $52.3\%$ in median error
 and on every animal in mean and RMS error as well. That is the largest effect
 in the study that transfers, and it is not an estimator result.
+Eleventh, one constant does pool: setting each animal's temperature offset to
+the mean of the other six animals' truth-fitted values beats the single-animal
+offset on all seven (one-sided sign test $p=0.008$) and lowers the cohort mean
+of per-animal medians from $171.0$ to $162.2$\,\si{\km}, matching an oracle
+fitted on each animal's own fixes ($162.8$\,\si{\km}). Process noise does not
+pool: a leave-one-animal-out vote moves the animal that set the shipped value
+from $141.8$ to $727.1$\,\si{\km}, and a particle-budget ladder shows most of
+that cliff is sampler convergence rather than biology.
 The only estimator that holds up on both windows is the proprietary one I did
 not write, which I report here as the benchmark to beat.
 \end{abstract}
@@ -131,7 +139,8 @@ respectively; classes 0, A and B are unquoted by Argos, so these are the
 empirical marine-vertebrate values rather than anything the system guarantees.
 
 The Argos track is the only ground truth used anywhere in this paper. It is
-never an input to any estimator.
+never an input to any estimator. Fig.~\ref{fig:map} shows it together with
+the estimated tracks.
 
 \begin{figure}[t]
 \centering
@@ -175,7 +184,8 @@ $12.88$ and $10.43$ minutes. The second refits the same form on the raw-light
 times and gives $h_0^{\text{dawn}}=-5.56\degree$,
 $h_0^{\text{dusk}}=-5.88\degree$ and $\beta=+0.0085$, with a residual RMS of
 $4.80$ minutes. The second looks much better and behaves much worse;
-Section~\ref{sec:recal} is about that.
+Section~\ref{sec:recal} is about that. Fig.~\ref{fig:cal} shows the first
+fit's residuals on the window it was fitted to.
 
 
 \begin{figure}[t]
@@ -192,7 +202,8 @@ Daily $0.25\degree$ optimally interpolated SST is compared with the tag's
 shallowest daily temperature, and the resulting log-likelihood is added to the
 twilight term. The point of SST is not that it is accurate. It is that its
 information is orthogonal to day length, so it carries latitude through the
-equinox where the light data cannot. In March alone it moves the particle
+equinox where the light data cannot. Fig.~\ref{fig:equinox} shows the
+sensitivity of day length to latitude passing through zero there. In March alone it moves the particle
 filter from $522$ to $109$\,\si{\km} median error.
 
 \subsection{Seafloor-depth aiding}
@@ -269,7 +280,9 @@ in this paper. And the ordering of my own rows changes completely between the
 tuning column and the lockbox column: the best tuning-window configuration
 ($84.9$\,\si{\km}) is nearly the worst lockbox configuration
 ($543.9$\,\si{\km}), while a plain EKF smoother is the best lockbox
-configuration at $319$\,\si{\km}.
+configuration at $319$\,\si{\km}. Fig.~\ref{fig:ts} separates the two
+coordinates: longitude is recovered by everything, and the rows differ almost
+entirely in latitude.
 
 \begin{table}[t]
 \caption{Median great-circle error (\si{\km}), one scorer and one matched event
@@ -520,7 +533,8 @@ the shallower range.}
 \label{fig:depths}
 \end{figure}
 
-The depth distribution differs sharply between windows. In the calibration
+The depth distribution differs sharply between windows
+(Fig.~\ref{fig:depths}). In the calibration
 window the median twilight depth is $51$\,\si{\m} and the 95th percentile is
 $94$\,\si{\m}; in the lockbox the median is $98$\,\si{\m} and the 95th percentile
 is $182$\,\si{\m}. The parameter $\beta$ in \eqref{eq:h0} was therefore fitted
@@ -1436,7 +1450,8 @@ the only animal whose $75$th percentile moves the wrong way ($229$ to
 $247$\,\si{\km}). I do not count it as a win. The honest summary is that the
 observable which carries latitude was being withheld from six of seven animals
 by the extent of a downloaded file, and that restoring it is worth more than
-any change I made to the estimator.
+any change I made to the estimator. The offset behind the with-SST column is
+still 07\_05's; Section~\ref{sec:pool} asks whether it can be shared.
 
 \section{Shared Constants, and a Lockbox Too Small to Rule}
 \label{sec:pool}
@@ -1648,7 +1663,12 @@ enough to have shown the headline was a tuning-window number, and not enough to
 adjudicate a $25\%$ change, as Section~\ref{sec:pool} found. Finally, the
 particle budget is itself a limitation rather than a detail: at $8{,}000$
 particles the filter is not converged at the process-noise scales most of the
-cohort prefers, so every process-noise conclusion is conditional on compute. Nothing here should be read as a general ranking of
+cohort prefers, so every process-noise conclusion is conditional on compute. The leave-one-animal-out protocol is also not perfectly clean for the
+process-noise vote: each training animal is scored with its own pooled offset,
+which includes a contribution from the held-out animal, so the vote carries a
+second-order dependence on the animal it is supposed to exclude. The offset
+comparison of Table~\ref{tab:loo} does not, because each animal's constant is
+an average over the other six only. Nothing here should be read as a general ranking of
 nonlinear filters; it is a statement about what this data set can resolve, which
 is less than I originally claimed. The Argos error model for classes 0, A and B
 is assumed rather than known. GPE3 is a black box, so I can say that it
@@ -1717,6 +1737,16 @@ look like skill. None of this says habitat information is worthless; it says
 this particular prior earned its gain by shrinking the feasible area, so any
 habitat term has to be scored against a deliberately wrong copy of itself
 before it is credited with anything.
+
+Extending the study from one animal to seven changes which of these claims
+survive. Two of the pipeline's defects were invisible on the tuned animal and
+obvious on the others, and the largest effect anywhere in this work turned out
+to be a reference field that had only ever been downloaded for one deployment
+window. One parameter does behave like a shared constant: a temperature offset
+averaged over six animals is as good as fitting each animal its own, which is
+what happens when the per-animal estimates are mostly estimation noise. The
+process-noise scale does not pool, and the obstacle there is my sampler rather
+than the animals.
 
 The estimator that generalises best here is still the proprietary one, and I
 would rather treat that as the benchmark to beat than as a verdict on
