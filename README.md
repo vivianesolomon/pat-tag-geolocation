@@ -43,6 +43,11 @@ noise was fitted on the one month the animal was migrating, and halving it - a
 decision taken on the tuning window alone - moves the forward filter's lockbox
 median from 412 to 313 km. Finding 8 has the details.
 
+That table is one animal. The seven-animal version is findings 9 to 11, and
+the short form is that the biggest effect in the whole project was a reference
+file that had only been downloaded for one deployment window, and that exactly
+one constant survived being set leave-one-animal-out.
+
 ## Eleven things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
@@ -325,6 +330,26 @@ goes 171.0 to 162.2 km against 162.8 km for an oracle that fits each animal on
 its own Argos fixes. Averaging six noisy estimates is as good as handing every
 animal its own answer. This is the one result here I would call a genuine
 shared-parameter generalisation.
+
+| Animal | Frozen | Release | Pooled | Oracle\* |
+|---|---:|---:|---:|---:|
+| 07_05 | 159.1 ± 3.3 | 155.5 ± 6.2 | 141.8 ± 9.5 | 150.8 ± 2.7 |
+| 07_03 | 401.5 ± 12.8 | 390.7 ± 7.6 | 388.0 ± 14.8 | 400.3 ± 8.6 |
+| 08_01 | 80.6 ± 0.8 | 67.1 ± 1.0 | 78.1 ± 0.7 | 77.1 ± 0.2 |
+| 08_02 | 107.6 ± 0.9 | 115.3 ± 0.8 | 104.9 ± 1.6 | 109.6 ± 0.7 |
+| 08_04 | 176.2 ± 1.4 | 215.9 ± 0.8 | 159.8 ± 1.0 | 152.9 ± 0.1 |
+| 08_09 | 199.9 ± 4.6 | 207.8 ± 3.2 | 192.5 ± 3.1 | 177.3 ± 5.2 |
+| 09_15 | 72.2 ± 1.7 | 100.3 ± 3.3 | 70.4 ± 3.6 | 72.0 ± 1.5 |
+| **Mean** | **171.0** | **178.9** | **162.2** | **162.8** |
+
+Median great-circle error in km, three seeds, everything else held at the
+frozen 07_05 calibration. *Frozen* is 07_05's offset applied to all seven;
+*release* is each tag's own release-window estimate from finding 10; *pooled*
+is the mean of the other six animals' truth-fitted offsets, which never sees
+the animal it is scored on. \* is fitted on the animal's own Argos fixes and is
+an upper bound, not a result I am entitled to quote. The release-window
+estimator is the worst of the three on average, worse than the frozen offset on
+four of the seven animals, and on 08_04 worse than using no temperature at all.
 
 The process noise does not survive it. Swept on a grid, six of the seven animals
 keep improving as the process noise comes down - 08_09 runs 192 to 119 km
