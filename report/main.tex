@@ -26,67 +26,58 @@ Pop-up archival transmitting (PAT) tags infer animal position from the timing
 of sunrise and sunset. The measurement is well conditioned in longitude and
 nearly singular in latitude near an equinox, which makes it a useful stress
 test for nonlinear filtering. I build an extended Kalman filter, an unscented
-Kalman filter, a bootstrap particle filter, two smoothers and a grid HMM for a
-$137$-day juvenile white shark (\emph{Carcharodon carcharias}) record. I score
-all of them against $122$ Argos satellite fixes from a second tag on the same
-animal. The contribution is an audit rather than an error number. I hold out
-the final $30$ days of the ground truth before writing any model code, never
-use it for a modelling or tuning decision, and repeat every stochastic run
-over three to ten seeds. Seven results follow. First, the headline was a
-tuning-window number. My best configuration reaches $117$\,\si{\km} median
-error on the window I tuned on and $544$\,\si{\km} on the held-out window,
-where the GPE3 reference smoother reaches $118$\,\si{\km}
-(Table~\ref{tab:main}). Second, the resolution floor is coarse. Seed-to-seed
-spread is $29$--$90$\,\si{\km}, far larger than the $1$--$5$\,\si{\km} steps
-an earlier ablation ladder reported, so those steps were noise. Across $75$
-pipeline variants, tuning-window rank predicts held-out rank only weakly
-(Spearman $\rho=+0.30$), and the variant that looks best while tuning ranks
-$54$th of $75$ when finally tested (Section~\ref{sec:transfer}). Third, the
-dominant error has an identifiable cause that no filter in this family can
-remove. A twilight pair is two numbers and position is two unknowns, so a
-threshold bias is confounded with position by construction. One minute of
-common-mode bias is observationally identical to $25$\,\si{\km} of longitude,
-and one minute of antisymmetric bias to $112$\,\si{\km} of latitude. A
-one-parameter bias fix selected without touching the held-out data improves
-calibration and not accuracy. Widening the bias family to three dimensions
-makes tuning-window error four times worse, because the same
-marginal-likelihood rule selects the degenerate direction every time
-(Section~\ref{sec:ident}). Fourth, smoothing confirms that what remains is
-bias and not variance. A particle smoother adds no parameter and cuts
-tuning-window error from $119$ to $69$\,\si{\km}, while held-out error is
-statistically unchanged at $388\pm23$ against $404\pm3$\,\si{\km}
-(Section~\ref{sec:smooth}). Fifth, applying the frozen configuration to six
-further double-tagged animals from the same public archive exposed two defects
-that one animal could not reveal. The seafloor constraint was keyed to the
-tuned animal's timestamps and silently disabled itself on every other shark.
-The filter's clock was anchored to the tuned animal's release date, which left
-one animal frozen on its release prior for its entire record and gave it the
-lowest error in the study. With both repaired, halving the process noise helps
-all seven animals, by $8.5$ to $32.4\%$ in median error
-(Table~\ref{tab:cohortsum}). Sixth, the largest transferable gain is a
-data-handling repair and not an estimator. The gridded temperature field had
-been downloaded for the tuned animal's deployment window only. As a result
-$149$ of the cohort's $1052$ dawn readings had anything to compare against,
-and three of the seven animals had none at all. The likelihood also treated a
-missing reference as an impossible position rather than as no information.
-Extending the field over the cohort and correcting that rule improves all
-seven animals, by $2.6$ to $52.3\%$ in median error and on every animal in
-mean and RMS error as well (Section~\ref{sec:sstcohort}). Seventh, one
-constant pools across animals and one does not. Setting each animal's
-temperature offset to the mean of the other six animals' truth-fitted values
-beats the single-animal offset on all seven (one-sided sign test $p=0.008$).
-It lowers the cohort mean of per-animal medians from $171.0$ to
-$162.2$\,\si{\km}, against $162.8$\,\si{\km} for an oracle fitted on each
-animal's own fixes. The same treatment of the process-noise scale fails. A
-leave-one-animal-out vote moves the animal that set the shipped value from
-$141.8$ to $727.1$\,\si{\km}, and a particle-budget ladder shows that most of
-that cliff is sampler convergence rather than biology
-(Section~\ref{sec:pool}). GPE3, the manufacturer's proprietary HMM smoother,
-is the only estimator here that holds up on both windows. Scored by the same
-code on the same fixes it is also ahead on all seven animals, $52.1$ against
-$162.2$\,\si{\km} on the cohort mean of per-animal medians
-(Table~\ref{tab:cohortsum}, Fig.~\ref{fig:cohort}), so I use it throughout as
-an external benchmark rather than a target I claim to beat.
+Kalman filter, a bootstrap particle filter, two smoothers and a grid HMM on
+one $137$-day juvenile white shark (\emph{Carcharodon carcharias}) record,
+then freeze that configuration and apply it unchanged to six further
+double-tagged animals from the same public archive. Every animal is scored
+against Argos fixes from a second tag on the same shark. The contribution is
+an audit rather than an error number: the final $30$ days of the development
+animal are held out before any model code is written, the other six animals
+are never tuned on, and every stochastic run is repeated over three to ten
+seeds. Five results follow. \emph{(1) The cohort is where the real defects
+were.} Six new animals exposed two faults one animal could not reveal: a
+seafloor constraint keyed to the tuned animal's timestamps, which silently
+disabled itself on every other shark, and a filter clock anchored to the tuned
+animal's release date, which froze one animal on its release prior for its
+entire record and gave it the lowest error in the study. With both repaired,
+halving the process noise helps all seven animals, by $8.5$ to $32.4\%$
+(Table~\ref{tab:cohortsum}, Fig.~\ref{fig:cohort}). \emph{(2) The largest
+transferable gain was data handling, not estimation.} The temperature
+reference field had been downloaded for the tuned animal's deployment window
+only, so $149$ of the cohort's $1052$ dawn readings had anything to compare
+against and three animals had none at all; the likelihood also read a missing
+reference as an impossible position rather than as no information. Repairing
+both improves all seven animals, by $2.6$ to $52.3\%$. The two repairs
+together cut the cohort mean of per-animal medians from $282.2$ to
+$171.0$\,\si{\km} (Section~\ref{sec:sstcohort}). \emph{(3) One constant
+pools across animals and one does not.} A temperature offset set
+leave-one-animal-out beats the single-animal offset on all seven (sign test
+$p=0.008$) and reaches $162.2$\,\si{\km}, against $162.8$\,\si{\km} for an
+oracle fitted on each animal's own fixes. The same treatment of the
+process-noise scale collapses, from $141.8$ to $727.1$\,\si{\km} on the animal
+that set the shipped value, and a particle-budget ladder attributes most of
+that cliff to sampler convergence rather than biology
+(Section~\ref{sec:pool}). \emph{(4) Tuning-window numbers did not
+generalise.} My best single-animal configuration reaches $117$\,\si{\km} on
+the window I tuned on and $544$\,\si{\km} on the held-out window
+(Table~\ref{tab:main}). Seed-to-seed spread is $29$--$90$\,\si{\km}, far
+larger than the $1$--$5$\,\si{\km} steps an earlier ablation ladder reported,
+and across $75$ variants tuning rank predicts held-out rank only weakly
+($\rho=+0.30$), with the best-on-tuning variant ranking $54$th of $75$
+(Section~\ref{sec:transfer}). \emph{(5) The dominant error has a cause no
+filter in this family can remove.} A twilight pair is two numbers and position
+is two unknowns, so a threshold bias is confounded with position by
+construction: one minute of common-mode bias is observationally identical to
+$25$\,\si{\km} of longitude. A bias fix chosen without touching held-out data
+improves calibration and not accuracy, and widening the family makes it worse
+(Section~\ref{sec:ident}); a particle smoother, which adds no parameter, cuts
+tuning-window error from $119$ to $69$\,\si{\km} while held-out error is
+statistically unchanged (Section~\ref{sec:smooth}), confirming that what
+remains is bias rather than variance. GPE3, the manufacturer's proprietary HMM
+smoother, is the only estimator here that holds up on both windows. Scored by
+the same code on the same fixes it is ahead on all seven animals, $52.1$
+against $162.2$\,\si{\km}, so I use it throughout as an external benchmark
+rather than a target I claim to beat.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -282,8 +273,79 @@ standard deviation across seeds. This is the single cheapest change in the
 paper and the one that invalidated the most prior conclusions.
 
 \section{Results}
-\subsection{Where the methods land}
-Table~\ref{tab:main} gives median error on the full evaluation set and,
+\subsection{The same pipeline on seven animals}
+\label{sec:summary}
+Table~\ref{tab:cohortsum} and Fig.~\ref{fig:cohort} are the headline result,
+so they come before anything measured on a single animal: seven animals, one
+frozen pipeline, no per-animal tuning. The table is the
+cumulative effect of the three interventions that survived the audit, each
+applied to the frozen configuration and scored against every animal's own
+Argos fixes: halving the process noise once two cohort-only defects were
+repaired (Section~\ref{sec:cohort}), extending the temperature reference field
+over the whole cohort and correcting its missing-data rule
+(Section~\ref{sec:sstcohort}), and replacing the single-animal temperature
+offset with one pooled leave-one-animal-out (Section~\ref{sec:pool}). Only
+07\_05 was ever tuned on; for the other six every day is held out.
+
+\begin{table*}[t]
+\caption{The cohort in one table. Median great-circle error in \si{\km}
+against each animal's own Argos fixes, accumulated left to right. Published is
+the frozen 07\_05 configuration with the two cohort defects repaired;
+$\sigma_v/2$ halves the process noise; $+$SST adds the extended reference field
+and the corrected missing-data rule; $+$pooled replaces the single-animal
+temperature offset with a leave-one-animal-out one. Three seeds; seed spreads
+are given per column in Tables~\ref{tab:cohort}, \ref{tab:sstcohort} and
+\ref{tab:loo}. GPE3 is the manufacturer's smoother scored by the same code on
+the same Argos fixes, so the last column is a like-for-like ratio of $+$pooled to
+GPE3. $^{\dagger}$ marks the only animal ever tuned on.}
+\label{tab:cohortsum}
+\centering
+\footnotesize
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Animal & Fix & Published & $\sigma_v/2$ & $+$SST & $+$pooled & Total & GPE3 & Ratio \\
+\midrule
+07\_05$^{\dagger}$ & $115$ & $364.4$ & $333.4$ & $159.1$ & $141.8$ & $-61.1\%$ & $79.6$ & $1.78$ \\
+07\_03             & $140$ & $526.3$ & $477.0$ & $401.5$ & $388.0$ & $-26.3\%$ & $51.0$ & $7.62$ \\
+08\_01             & $47$  & $166.3$ & $130.4$ & $80.6$  & $78.1$  & $-53.0\%$ & $31.2$ & $2.51$ \\
+08\_02             & $102$ & $162.7$ & $135.9$ & $107.6$ & $104.9$ & $-35.5\%$ & $38.8$ & $2.70$ \\
+08\_04             & $148$ & $234.4$ & $180.9$ & $176.2$ & $159.8$ & $-31.8\%$ & $62.5$ & $2.56$ \\
+08\_09             & $139$ & $308.8$ & $233.3$ & $199.9$ & $192.5$ & $-37.7\%$ & $63.0$ & $3.06$ \\
+09\_15             & $18$  & $212.8$ & $143.8$ & $72.2$  & $70.4$  & $-66.9\%$ & $38.5$ & $1.83$ \\
+\midrule
+Mean               &       & $282.2$ & $233.5$ & $171.0$ & $162.2$ & $-42.5\%$ & $52.1$ & $3.12$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Every animal improves, by $26$ to $67\%$, and the cohort mean of the
+per-animal medians falls from $282.2$ to $162.2$\,\si{\km}. Two things about
+that are worth saying plainly. None of it comes from a better estimator: the
+three columns are a motion-model scale that had been fitted on the wrong
+month, a reference file that covered one deployment window out of seven, and a
+constant averaged over six animals instead of one. And it is still not
+competitive with the external benchmark. The archive carries a GPE3 track for
+every animal, so I scored it with the same code on the same fixes: it is ahead
+on $7$ of $7$, by factors of $1.8$ to $7.6$, and its cohort mean of per-animal
+medians is $52.1$ against my $162.2$\,\si{\km}. Fig.~\ref{fig:cohort} draws
+both against the fixes.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/cohort_tracks}
+\caption{The cohort at the end of deployment. Grey rings are each animal's own
+Argos fixes, orange is the GPE3 reference track, blue is my filter in the
+configuration of Table~\ref{tab:cohortsum}'s $+$pooled column at a single seed.
+Panels are ordered by deployment length; the running medians printed in each
+panel are over the fixes drawn. Only 07\_05 was ever tuned on. The repository
+holds an animated version of this figure, one frame per $1.2$ days.}
+\label{fig:cohort}
+\end{figure*}
+
+\subsection{Where the methods land on the development animal}
+Everything from here to Section~\ref{sec:cohort} is diagnostic work on 07\_05,
+the one animal I was allowed to tune on, and Table~\ref{tab:main} is where its
+estimators land. It gives median error on the full evaluation set and,
 separately, on the tuning window and the lockbox. All rows use one scorer and
 one set of matched events, so the columns are comparable.
 
@@ -329,74 +391,6 @@ GPE3 HMM smoother (external)        &   72.0 &   71.1 &  118.4 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\subsection{The same pipeline on seven animals}
-\label{sec:summary}
-Table~\ref{tab:main} is one animal, and it is the table a reader meets first,
-so Table~\ref{tab:cohortsum} puts the other six beside it. It is the
-cumulative effect of the three interventions that survived the audit, each
-applied to the frozen configuration and scored against every animal's own
-Argos fixes: halving the process noise once two cohort-only defects were
-repaired (Section~\ref{sec:cohort}), extending the temperature reference field
-over the whole cohort and correcting its missing-data rule
-(Section~\ref{sec:sstcohort}), and replacing the single-animal temperature
-offset with one pooled leave-one-animal-out (Section~\ref{sec:pool}). Only
-07\_05 was ever tuned on; for the other six every day is held out.
-
-\begin{table*}[t]
-\caption{The cohort in one table. Median great-circle error in \si{\km}
-against each animal's own Argos fixes, accumulated left to right. Published is
-the frozen 07\_05 configuration with the two cohort defects repaired;
-$\sigma_v/2$ halves the process noise; $+$SST adds the extended reference field
-and the corrected missing-data rule; $+$pooled replaces the single-animal
-temperature offset with a leave-one-animal-out one. Three seeds; seed spreads
-are given per column in Tables~\ref{tab:cohort}, \ref{tab:sstcohort} and
-\ref{tab:loo}. GPE3 is the manufacturer's smoother scored by the same code on
-the same Fix fixes, so the last column is a like-for-like ratio of $+$pooled to
-GPE3. $^{\dagger}$ marks the only animal ever tuned on.}
-\label{tab:cohortsum}
-\centering
-\footnotesize
-\begin{tabular}{@{}lrrrrrrrr@{}}
-\toprule
-Animal & Fix & Published & $\sigma_v/2$ & $+$SST & $+$pooled & Total & GPE3 & Ratio \\
-\midrule
-07\_05$^{\dagger}$ & $115$ & $364.4$ & $333.4$ & $159.1$ & $141.8$ & $-61.1\%$ & $79.6$ & $1.78$ \\
-07\_03             & $140$ & $526.3$ & $477.0$ & $401.5$ & $388.0$ & $-26.3\%$ & $51.0$ & $7.62$ \\
-08\_01             & $47$  & $166.3$ & $130.4$ & $80.6$  & $78.1$  & $-53.0\%$ & $31.2$ & $2.51$ \\
-08\_02             & $102$ & $162.7$ & $135.9$ & $107.6$ & $104.9$ & $-35.5\%$ & $38.8$ & $2.70$ \\
-08\_04             & $148$ & $234.4$ & $180.9$ & $176.2$ & $159.8$ & $-31.8\%$ & $62.5$ & $2.56$ \\
-08\_09             & $139$ & $308.8$ & $233.3$ & $199.9$ & $192.5$ & $-37.7\%$ & $63.0$ & $3.06$ \\
-09\_15             & $18$  & $212.8$ & $143.8$ & $72.2$  & $70.4$  & $-66.9\%$ & $38.5$ & $1.83$ \\
-\midrule
-Mean               &       & $282.2$ & $233.5$ & $171.0$ & $162.2$ & $-42.5\%$ & $52.1$ & $3.12$ \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-Every animal improves, by $26$ to $67\%$, and the cohort mean of the
-per-animal medians falls from $282.2$ to $162.2$\,\si{\km}. Two things about
-that are worth saying plainly. None of it comes from a better estimator: the
-three columns are a motion-model scale that had been fitted on the wrong
-month, a reference file that covered one deployment window out of seven, and a
-constant averaged over six animals instead of one. And it is still not
-competitive with the external benchmark. The archive carries a GPE3 track for
-every animal, so I scored it with the same code on the same fixes: it is ahead
-on $7$ of $7$, by factors of $1.8$ to $7.6$, and its cohort mean of per-animal
-medians is $52.1$ against my $162.2$\,\si{\km}. Fig.~\ref{fig:cohort} draws
-both against the fixes.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figs/cohort_tracks}
-\caption{The cohort at the end of deployment. Grey rings are each animal's own
-Argos fixes, orange is the GPE3 reference track, blue is my filter in the
-configuration of Table~\ref{tab:cohortsum}'s $+$pooled column at a single seed.
-Panels are ordered by deployment length; the running medians printed in each
-panel are over the fixes drawn. Only 07\_05 was ever tuned on. The repository
-holds an animated version of this figure, one frame per $1.2$ days.}
-\label{fig:cohort}
-\end{figure*}
 
 \subsection{The headline was a tuning-window number}
 The earlier version of this work quoted its best configuration at roughly
@@ -1707,6 +1701,11 @@ Table~\ref{tab:cohortsum}).
 scale does not.} One constant set leave-one-animal-out matches an oracle fitted
 on each animal's own fixes; the other collapses on the animal that set it, for
 reasons that belong to the sampler (Section~\ref{sec:pool}).
+\item \textbf{The lockbox is powered for large effects only.} With $20$
+matched twilight events and $24$ Argos fixes, seed spread alone is
+$80$--$90$\,\si{\km}, so nothing below roughly $170$\,\si{\km} clears twice
+that. It was enough to show that the headline was a tuning-window number, and
+it is not enough to adjudicate a $25\%$ change (Section~\ref{sec:proto}).
 \item \textbf{GPE3 is the only estimator that holds up on both windows.} It is
 the external benchmark here, it is ahead on all seven animals by factors of
 $1.8$ to $7.6$, and nothing I built closes the gap (Tables~\ref{tab:main}
@@ -1802,9 +1801,16 @@ works too; that one control is what separated Section~\ref{sec:prior}'s real
 result from its apparent one.
 
 \section{Conclusion}
-Light-level geolocation of this record is dominated not by the choice of
-nonlinear filter but by a biased measurement model that no filter in the family
-can detect from the data it is given. On the window I tuned on, my best
+Light-level geolocation of these records is dominated not by the choice of
+nonlinear filter but by a biased measurement model that no filter in the
+family can detect from the data it is given, and by the handling of the
+reference data that filter is fed. Across seven animals, one frozen pipeline
+and no per-animal tuning, the changes that mattered were a process-noise scale
+that had been fitted on the wrong month, a temperature field that covered one
+deployment window out of seven, and a constant averaged over six animals
+instead of one. Together they take the cohort mean of per-animal medians from
+$282.2$ to $162.2$\,\si{\km}, and none of it came from a better estimator. On
+the single animal I was allowed to tune on, my best
 configuration reaches $117$\,\si{\km} and approaches the manufacturer's
 smoother. On 30 days I never looked at, it reaches $544$\,\si{\km} against the
 smoother's $118$\,\si{\km}, and reports a $201$\,\si{\km} standard deviation
