@@ -34,39 +34,9 @@ version of the last frame: [`figs/cohort_tracks.png`](figs/cohort_tracks.png).
 
 ## The result
 
-Median great-circle error against Argos, in km. *Tune* is the window I made
-every modelling decision on. *Lock* is the final 30 days, scored once, never
-looked at beforehand.
-
-| Method | All | Tune | Lock |
-|---|---:|---:|---:|
-| Naive daily inversion | 513.8 | 570.5 | 473.7 |
-| EKF | 347.2 | 285.2 | 413.0 |
-| UKF | 356.6 | 291.2 | 417.1 |
-| Bootstrap particle filter (light + depth) | 316.9 | 240.2 | 391.0 |
-| EKF + RTS smoother | 285.7 | 169.4 | 359.0 |
-| EKF + RTS, QC events | 279.9 | 169.5 | **319.4** |
-| PF + SST | 198.4 | 114.9 | 498.4 |
-| Grid HMM | 163.9 | 130.1 | 569.2 |
-| PF + SST + seafloor | 152.8 | 123.2 | 452.4 |
-| Two-filter cloud fusion (my best) | 117.4 | **84.9** | 543.9 |
-| GPE3 HMM smoother (external benchmark) | 72.0 | 71.1 | 118.4 |
-
-My best configuration gets within 14 km of the manufacturer's proprietary
-smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
-days I never looked at**. The estimator that generalises here is the
-manufacturer's, which I use throughout as an external benchmark.
-
-One change has been made since that table was built: the process
-noise was fitted on the one month the animal was migrating, and halving it - a
-decision taken on the tuning window alone - moves the forward filter's lockbox
-median from 412 to 313 km. Finding 8 has the details.
-
-### And the same pipeline on seven animals
-
-That table is one animal. Here are all seven, with the three interventions
-that survived the audit accumulated left to right. Only 07_05 was ever tuned
-on; for the other six every day is held out.
+Seven animals, one frozen configuration, no per-animal tuning. The three
+interventions that survived the audit accumulate left to right. Only 07_05 was
+ever tuned on; for the other six, every day is held out.
 
 | Animal | Fixes | Published | sigma_v/2 | +SST | +pooled | Total | GPE3 | Ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -97,6 +67,68 @@ is still not competitive. The archive carries a GPE3 track for every animal,
 so I scored it the same way: it wins on 7 of 7, by factors of 1.8 to 7.6, and
 its cohort mean of per-animal medians is 52.1 km against my 162.2 km. That is
 the gap the animation at the top of this page is showing you.
+
+### The single animal I developed on
+
+Everything after this point is diagnostic work on 07_05, the one animal I was
+allowed to tune on. Median great-circle error against Argos, in km. *Tune* is
+the window I made every modelling decision on. *Lock* is the final 30 days,
+scored once, never looked at beforehand.
+
+| Method | All | Tune | Lock |
+|---|---:|---:|---:|
+| Naive daily inversion | 513.8 | 570.5 | 473.7 |
+| EKF | 347.2 | 285.2 | 413.0 |
+| UKF | 356.6 | 291.2 | 417.1 |
+| Bootstrap particle filter (light + depth) | 316.9 | 240.2 | 391.0 |
+| EKF + RTS smoother | 285.7 | 169.4 | 359.0 |
+| EKF + RTS, QC events | 279.9 | 169.5 | **319.4** |
+| PF + SST | 198.4 | 114.9 | 498.4 |
+| Grid HMM | 163.9 | 130.1 | 569.2 |
+| PF + SST + seafloor | 152.8 | 123.2 | 452.4 |
+| Two-filter cloud fusion (my best) | 117.4 | **84.9** | 543.9 |
+| GPE3 HMM smoother (external benchmark) | 72.0 | 71.1 | 118.4 |
+
+My best configuration gets within 14 km of the manufacturer's proprietary
+smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
+days I never looked at**. The estimator that generalises here is the
+manufacturer's, which I use throughout as an external benchmark.
+
+One change has been made since that table was built: the process
+noise was fitted on the one month the animal was migrating, and halving it - a
+decision taken on the tuning window alone - moves the forward filter's lockbox
+median from 412 to 313 km. Finding 8 has the details.
+
+## What to remember
+
+If you read nothing else:
+
+1. **Tuning-window numbers did not generalise.** My best configuration on the
+   window I tuned on was nearly my worst on the window I had never seen, and
+   across 75 variants tuning rank predicted held-out rank only weakly
+   (rho = +0.30).
+2. **The biggest wins were data handling, not estimation.** A reference
+   temperature field downloaded for one deployment window out of seven, and a
+   likelihood that read "no reference value" as "impossible position", cost
+   more than every filter choice in the study combined.
+3. **Some parameters are not estimable, and it is worth checking first.** A
+   twilight pair is two numbers and position is two unknowns, so a threshold
+   bias is a linear combination of the thing it was meant to correct. Every
+   bias-state fix I tried was doomed before I wrote it.
+4. **One constant pools across animals; another does not.** A temperature
+   offset set leave-one-animal-out matches an oracle fitted on each animal's
+   own fixes. The same treatment of the process-noise scale collapses, and the
+   reason is sampler convergence rather than biology.
+5. **The held-out set is powered for large effects only.** With 20 twilight
+   events and 24 Argos fixes, seed spread alone is 80-90 km, so nothing below
+   roughly 170 km clears twice the noise. It was enough to overturn the
+   headline and is not enough to adjudicate a 25% change. Sizing it by
+   calendar span instead of by scorable events was my mistake.
+6. **The proprietary smoother is still ahead, on both windows and on all seven
+   animals.** I report it as an external benchmark, not as a target I claim to
+   beat.
+
+---
 
 ## Eleven things the audit found
 
