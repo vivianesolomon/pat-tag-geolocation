@@ -11,6 +11,25 @@ version of this project claimed did not survive contact with it.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vivianesolomon/pat-tag-geolocation/blob/main/notebooks/jws_geolocation_filters.ipynb)
 
+<p align="center">
+  <img src="figs/cohort_tracks.gif" width="100%"
+       alt="Seven white sharks over 146 days. Blue is my particle filter, orange is the tag maker GPE3 track, grey rings are the independent Argos fixes.">
+</p>
+
+**Seven animals, one frozen configuration, 146 days of deployment in twelve
+seconds.** Grey rings are the independent Argos fixes as they arrive, orange is
+the tag maker's GPE3 track, blue is my filter. The number in each panel is the
+running median error over the fixes revealed so far, so the gap you watch open
+up is the same quantity the tables below report (here at a single seed; the
+tables average three). Nothing about these six animals was used to choose a
+parameter.
+
+It is not a flattering picture of my filter, and that is the project. Averaged
+over the seven animals the tag maker's smoother ends at 51 km and mine at 166
+km, and most of this repository is about where that difference comes from and
+which parts of it survive being tested on data I never tuned on. Static
+version of the last frame: [`figs/cohort_tracks.png`](figs/cohort_tracks.png).
+
 ---
 
 ## The result
@@ -31,7 +50,7 @@ looked at beforehand.
 | Grid HMM | 163.9 | 130.1 | 569.2 |
 | PF + SST + seafloor | 152.8 | 123.2 | 452.4 |
 | Two-filter cloud fusion (my best) | 117.4 | **84.9** | 543.9 |
-| GPE3 HMM smoother (*not mine*) | 72.0 | 71.1 | 118.4 |
+| GPE3 HMM smoother (external benchmark) | 72.0 | 71.1 | 118.4 |
 
 My best configuration gets within 14 km of the manufacturer's proprietary
 smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
@@ -449,6 +468,8 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 ## What's in here
 
 ```
+figs/cohort_tracks.gif                    the animation at the top of this page
+figs/cohort_tracks.png                    its last frame, 220 dpi
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
 report/main.pdf                           the report, compiled from main.tex
 report/main.tex                           IEEE-format technical report, LaTeX source
@@ -473,8 +494,9 @@ pip install -r requirements.txt
 jupyter lab notebooks/jws_geolocation_filters.ipynb
 ```
 
-To build the report, the notebook writes its figures to `figs/`; copy that
-directory next to `report/main.tex` and run `pdflatex main.tex` twice.
+The notebook writes every figure to `figs/`. The two committed here are the
+cohort track figures; to build the report, run the notebook, copy `figs/` next
+to `report/main.tex` and run `pdflatex main.tex` twice.
 
 ## Method summary
 
