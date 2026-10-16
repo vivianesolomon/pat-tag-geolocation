@@ -1494,14 +1494,14 @@ quantity I am entitled to quote.
 \begin{table}[t]
 \caption{Temperature offset, frozen against pooled against oracle. Median
 great-circle error in \si{\km}, three seeds, everything else held at the frozen
-07\_05 calibration. \emph{Frozen} is 07\_05's offset applied to all seven;
-\emph{release} is each tag's own release-window estimate; \emph{pooled} is the
-mean of the other six animals' truth-fitted offsets, which never sees the
-held-out animal. $^{*}$ is fitted on the animal's own Argos fixes and is an
+07\_05 calibration. Frozen is 07\_05's offset applied to all seven; release is each tag's own
+release-window estimate; pooled is the mean of the other six animals'
+truth-fitted offsets, which never sees the held-out animal. $^{*}$ is fitted on the animal's own Argos fixes and is an
 upper bound, not a result I am entitled to quote.}
 \label{tab:loo}
 \centering
-\small
+\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Animal & Frozen & Release & Pooled & Oracle$^{*}$ \\
@@ -1514,7 +1514,7 @@ Animal & Frozen & Release & Pooled & Oracle$^{*}$ \\
 08\_09 & $199.9 \pm 4.6$  & $207.8 \pm 3.2$  & $192.5 \pm 3.1$  & $177.3 \pm 5.2$  \\
 09\_15 & $72.2 \pm 1.7$   & $100.3 \pm 3.3$  & $70.4 \pm 3.6$   & $72.0 \pm 1.5$   \\
 \midrule
-Mean   & $171.0$ & $176.1$ & $162.2$ & $162.8$ \\
+Mean   & $171.0$ & $178.9$ & $162.2$ & $162.8$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1528,8 +1528,9 @@ $162.8$\,\si{\km} for an oracle fitted on each animal's own fixes. Averaging
 six noisy estimates is as good as handing each animal its own answer, which is
 what one expects when the per-animal estimates are dominated by estimation noise
 rather than by real differences between tags. The per-tag release-window
-estimate, which uses no truth at all, is worse than either on average and is the
-only one of the three that is worse than doing nothing on two animals.
+estimate, which uses no truth at all, is the worst of the three on average at
+$178.9$\,\si{\km}; it is worse than the frozen offset on four of the seven
+animals, and on 08\_04 it is worse than using no temperature at all.
 
 \subsection{Process noise does not pool, and the obstacle is the sampler}
 The same treatment applied to the process-noise scale fails, and the failure is
