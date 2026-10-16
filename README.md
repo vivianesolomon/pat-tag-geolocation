@@ -43,7 +43,7 @@ noise was fitted on the one month the animal was migrating, and halving it - a
 decision taken on the tuning window alone - moves the forward filter's lockbox
 median from 412 to 313 km. Finding 8 has the details.
 
-## Ten things the audit found
+## Eleven things the audit found
 
 **1. The headline was a tuning-window number.** 117 km on the full evaluation
 window, 544 km on the lockbox. The full window carries 64 of its 84 matched
@@ -305,9 +305,53 @@ Per-tag temperature calibration is not where the remaining error is.
 
 The honest summary is that the observable carrying latitude was being withheld
 from six of seven animals by the extent of a downloaded file, and that restoring
-it is worth more than any change I made to the estimator. The headline tune/lock
-table at the top of this README is unchanged: the corrected rule was evaluated
-across the cohort, not re-scored on the single-animal lockbox split.
+it is worth more than any change I made to the estimator. I have since re-scored
+the single-animal lockbox under the corrected rule - finding 11 has it - and the
+headline tune/lock table at the top of this README is unchanged, because that
+re-score did not clear the noise floor.
+
+**11. A constant pooled across six animals beats one fitted on one - and the
+process noise I froze is partly a statement about my sampler.** Everything in
+finding 10 still leans on constants fitted to 07_05 and applied to the other
+six. That is a fair zero-shot test but a weak shared-parameter claim, so I redid
+both of the main ones leave-one-animal-out: for each animal the constant comes
+from the other six, and a held-out animal never contributes to its own value.
+
+The temperature offset survives the change and improves on it. Pooling the other
+six animals' offsets beats the frozen 07_05 offset on 7 of 7 animals, a
+one-sided sign test p of 0.008. Per animal the gain is small, a median of -3.3%,
+but the direction is unanimous, and the cohort mean of the per-animal medians
+goes 171.0 to 162.2 km against 162.8 km for an oracle that fits each animal on
+its own Argos fixes. Averaging six noisy estimates is as good as handing every
+animal its own answer. This is the one result here I would call a genuine
+shared-parameter generalisation.
+
+The process noise does not survive it. Swept on a grid, six of the seven animals
+keep improving as the process noise comes down - 08_09 runs 192 to 119 km
+between scale 0.50 and 0.25 - while 07_05, the animal that set 0.50 in the first
+place, goes off a cliff at 0.35. So the leave-one-out vote reproduces the frozen
+0.50 on six folds, and then on the fold that holds out 07_05 the other six vote
+0.25 and 07_05 scores 727 km against 142 km frozen.
+
+The obvious explanation is particle degeneracy, and the obvious diagnostic says
+no: effective sample size never falls below 4,027 of 8,000 and nothing is ever
+flagged as collapsed. The filter is not degenerate, it is confidently wrong -
+every particle is equally far from the animal, so the weights stay near-uniform
+and ESS sees nothing. What does move it is particles: sixteen times the budget
+takes 07_05 at scale 0.35 from 705 to 234 km, and the trend has not flattened.
+I am leaving the shipped value at 0.50 because I cannot demonstrate a converged
+alternative, but it should be read as the smallest process noise my sampler
+survives on the hardest animal rather than as an estimate of how a shark moves.
+
+I also opened the lockbox a second time, for the corrected temperature rule,
+because a corrected rule is a different filter and the number I had quoted no
+longer described what I ship. The lockbox median falls from 281 to 212 km, which
+reads like a 25% improvement until you put it beside the seed spread of 72 and
+82 km: the change is 0.8x the larger of the two, so I am not claiming it. The
+same comparison on the tuning window, which has 91 fixes instead of 24, moves
+160 to 145 km against spreads of 3 and 7 km, and that one is real. Twenty-four
+fixes cannot resolve a change of this size, which is a flaw in the lockbox I
+designed rather than in the fix.
 
 ### And one fix that failed
 
@@ -430,6 +474,12 @@ win was the likelihood, not the non-Gaussian posterior representation.
   shrinking the posterior rather than by adding information, an inverted or
   shuffled copy of it will improve the score too. That one control is what
   separated Finding 8's real result from its apparent one.
+- Size a held-out set by how many scorable events it lands on, not by how many
+  days it spans. Mine is 30 days and 24 fixes, which turned out to be too few to
+  resolve a 25% change against seed noise.
+- Check that a tuned numerical constant is not standing in for a converged
+  sampler. Halving the process noise looked like a modelling decision, and most
+  of what it was actually buying was stability at 8,000 particles.
 
 ## Data and limitations
 
