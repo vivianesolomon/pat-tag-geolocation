@@ -423,7 +423,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 
 ```
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
-report/main.pdf                           the report, compiled (13 pp.)
+report/main.pdf                           the report, compiled from main.tex
 report/main.tex                           IEEE-format technical report, LaTeX source
 requirements.txt                          pinned versions for local runs
 ```
