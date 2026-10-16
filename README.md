@@ -474,6 +474,7 @@ The compiled report is at [`report/main.pdf`](report/main.pdf).
 ```
 figs/cohort_tracks.gif                    the animation at the top of this page
 figs/cohort_tracks.png                    its last frame, 220 dpi
+figs/make_cohort_animation.py             the code that builds both
 notebooks/jws_geolocation_filters.ipynb   the whole pipeline, top to bottom
 report/main.pdf                           the report, compiled from main.tex
 report/main.tex                           IEEE-format technical report, LaTeX source
