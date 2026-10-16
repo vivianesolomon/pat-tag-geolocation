@@ -15,9 +15,9 @@
 \title{A Held-Out Audit of Nonlinear Filters for\\
 Light-Level Geolocation of a Juvenile White Shark}
 
-\author{\IEEEauthorblockN{Viviane Solomon}
+\author{\IEEEauthorblockN{Viviane Solomon '24}
 \IEEEauthorblockA{\textit{Harvey Mudd College}\\
-Claremont, CA, USA}}
+Los Angeles, CA, USA}}
 
 \maketitle
 
@@ -82,8 +82,11 @@ leave-one-animal-out vote moves the animal that set the shipped value from
 $141.8$ to $727.1$\,\si{\km}, and a particle-budget ladder shows that most of
 that cliff is sampler convergence rather than biology
 (Section~\ref{sec:pool}). GPE3, the manufacturer's proprietary HMM smoother,
-is the only estimator here that holds up on both windows, and I use it
-throughout as an external benchmark.
+is the only estimator here that holds up on both windows. Scored by the same
+code on the same fixes it is also ahead on all seven animals, $52.1$ against
+$162.2$\,\si{\km} on the cohort mean of per-animal medians
+(Table~\ref{tab:cohortsum}, Fig.~\ref{fig:cohort}), so I use it throughout as
+an external benchmark rather than a target I claim to beat.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -340,7 +343,7 @@ over the whole cohort and correcting its missing-data rule
 offset with one pooled leave-one-animal-out (Section~\ref{sec:pool}). Only
 07\_05 was ever tuned on; for the other six every day is held out.
 
-\begin{table}[t]
+\begin{table*}[t]
 \caption{The cohort in one table. Median great-circle error in \si{\km}
 against each animal's own Argos fixes, accumulated left to right. Published is
 the frozen 07\_05 configuration with the two cohort defects repaired;
@@ -348,27 +351,28 @@ $\sigma_v/2$ halves the process noise; $+$SST adds the extended reference field
 and the corrected missing-data rule; $+$pooled replaces the single-animal
 temperature offset with a leave-one-animal-out one. Three seeds; seed spreads
 are given per column in Tables~\ref{tab:cohort}, \ref{tab:sstcohort} and
-\ref{tab:loo}. $^{\dagger}$ marks the only animal ever tuned on.}
+\ref{tab:loo}. GPE3 is the manufacturer's smoother scored by the same code on
+the same Fix fixes, so the last column is a like-for-like ratio of $+$pooled to
+GPE3. $^{\dagger}$ marks the only animal ever tuned on.}
 \label{tab:cohortsum}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-Animal & Fix & Published & $\sigma_v/2$ & $+$SST & $+$pooled & Total \\
+Animal & Fix & Published & $\sigma_v/2$ & $+$SST & $+$pooled & Total & GPE3 & Ratio \\
 \midrule
-07\_05$^{\dagger}$ & $115$ & $364.4$ & $333.4$ & $159.1$ & $141.8$ & $-61.1\%$ \\
-07\_03             & $140$ & $526.3$ & $477.0$ & $401.5$ & $388.0$ & $-26.3\%$ \\
-08\_01             & $47$  & $166.3$ & $130.4$ & $80.6$  & $78.1$  & $-53.0\%$ \\
-08\_02             & $102$ & $162.7$ & $135.9$ & $107.6$ & $104.9$ & $-35.5\%$ \\
-08\_04             & $148$ & $234.4$ & $180.9$ & $176.2$ & $159.8$ & $-31.8\%$ \\
-08\_09             & $139$ & $308.8$ & $233.3$ & $199.9$ & $192.5$ & $-37.7\%$ \\
-09\_15             & $18$  & $212.8$ & $143.8$ & $72.2$  & $70.4$  & $-66.9\%$ \\
+07\_05$^{\dagger}$ & $115$ & $364.4$ & $333.4$ & $159.1$ & $141.8$ & $-61.1\%$ & $79.6$ & $1.78$ \\
+07\_03             & $140$ & $526.3$ & $477.0$ & $401.5$ & $388.0$ & $-26.3\%$ & $51.0$ & $7.62$ \\
+08\_01             & $47$  & $166.3$ & $130.4$ & $80.6$  & $78.1$  & $-53.0\%$ & $31.2$ & $2.51$ \\
+08\_02             & $102$ & $162.7$ & $135.9$ & $107.6$ & $104.9$ & $-35.5\%$ & $38.8$ & $2.70$ \\
+08\_04             & $148$ & $234.4$ & $180.9$ & $176.2$ & $159.8$ & $-31.8\%$ & $62.5$ & $2.56$ \\
+08\_09             & $139$ & $308.8$ & $233.3$ & $199.9$ & $192.5$ & $-37.7\%$ & $63.0$ & $3.06$ \\
+09\_15             & $18$  & $212.8$ & $143.8$ & $72.2$  & $70.4$  & $-66.9\%$ & $38.5$ & $1.83$ \\
 \midrule
-Mean               &       & $282.2$ & $233.5$ & $171.0$ & $162.2$ & $-42.5\%$ \\
+Mean               &       & $282.2$ & $233.5$ & $171.0$ & $162.2$ & $-42.5\%$ & $52.1$ & $3.12$ \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Every animal improves, by $26$ to $67\%$, and the cohort mean of the
 per-animal medians falls from $282.2$ to $162.2$\,\si{\km}. Two things about
@@ -376,8 +380,23 @@ that are worth saying plainly. None of it comes from a better estimator: the
 three columns are a motion-model scale that had been fitted on the wrong
 month, a reference file that covered one deployment window out of seven, and a
 constant averaged over six animals instead of one. And it is still not
-competitive with the external benchmark, which reaches $118$\,\si{\km} on the
-one animal where a comparison exists (Table~\ref{tab:main}).
+competitive with the external benchmark. The archive carries a GPE3 track for
+every animal, so I scored it with the same code on the same fixes: it is ahead
+on $7$ of $7$, by factors of $1.8$ to $7.6$, and its cohort mean of per-animal
+medians is $52.1$ against my $162.2$\,\si{\km}. Fig.~\ref{fig:cohort} draws
+both against the fixes.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/cohort_tracks}
+\caption{The cohort at the end of deployment. Grey rings are each animal's own
+Argos fixes, orange is the GPE3 reference track, blue is my filter in the
+configuration of Table~\ref{tab:cohortsum}'s $+$pooled column at a single seed.
+Panels are ordered by deployment length; the running medians printed in each
+panel are over the fixes drawn. Only 07\_05 was ever tuned on. The repository
+holds an animated version of this figure, one frame per $1.2$ days.}
+\label{fig:cohort}
+\end{figure*}
 
 \subsection{The headline was a tuning-window number}
 The earlier version of this work quoted its best configuration at roughly
@@ -1682,14 +1701,16 @@ so that whole family of fixes was unavailable from the start
 \item \textbf{The largest gains came from data and reference handling, not
 from the estimator.} A reference field downloaded for one deployment window,
 and a likelihood that read a missing reference as an impossibility, cost more
-than every filter choice in the study combined (Table~\ref{tab:cohortsum}).
+than every filter choice in the study combined (Section~\ref{sec:summary},
+Table~\ref{tab:cohortsum}).
 \item \textbf{The temperature offset pools across animals; the process-noise
 scale does not.} One constant set leave-one-animal-out matches an oracle fitted
 on each animal's own fixes; the other collapses on the animal that set it, for
 reasons that belong to the sampler (Section~\ref{sec:pool}).
 \item \textbf{GPE3 is the only estimator that holds up on both windows.} It is
-the external benchmark here, and nothing I built closes the gap
-(Table~\ref{tab:main}).
+the external benchmark here, it is ahead on all seven animals by factors of
+$1.8$ to $7.6$, and nothing I built closes the gap (Tables~\ref{tab:main}
+and~\ref{tab:cohortsum}, Fig.~\ref{fig:cohort}).
 \end{enumerate}
 
 \subsection{What survives}
