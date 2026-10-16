@@ -35,18 +35,45 @@ looked at beforehand.
 
 My best configuration gets within 14 km of the manufacturer's proprietary
 smoother **on the window I tuned on**, and is 4.6x worse than it **on the 30
-days I never looked at**. The estimator that generalises here is the one I did
-not write.
+days I never looked at**. The estimator that generalises here is the
+manufacturer's, which I use throughout as an external benchmark.
 
 One change has been made since that table was built: the process
 noise was fitted on the one month the animal was migrating, and halving it - a
 decision taken on the tuning window alone - moves the forward filter's lockbox
 median from 412 to 313 km. Finding 8 has the details.
 
-That table is one animal. The seven-animal version is findings 9 to 11, and
-the short form is that the biggest effect in the whole project was a reference
-file that had only been downloaded for one deployment window, and that exactly
-one constant survived being set leave-one-animal-out.
+### And the same pipeline on seven animals
+
+That table is one animal. Here are all seven, with the three interventions
+that survived the audit accumulated left to right. Only 07_05 was ever tuned
+on; for the other six every day is held out.
+
+| Animal | Fixes | Published | sigma_v/2 | +SST | +pooled | Total |
+|---|---:|---:|---:|---:|---:|---:|
+| 07_05† | 115 | 364.4 | 333.4 | 159.1 | 141.8 | −61.1% |
+| 07_03 | 140 | 526.3 | 477.0 | 401.5 | 388.0 | −26.3% |
+| 08_01 | 47 | 166.3 | 130.4 | 80.6 | 78.1 | −53.0% |
+| 08_02 | 102 | 162.7 | 135.9 | 107.6 | 104.9 | −35.5% |
+| 08_04 | 148 | 234.4 | 180.9 | 176.2 | 159.8 | −31.8% |
+| 08_09 | 139 | 308.8 | 233.3 | 199.9 | 192.5 | −37.7% |
+| 09_15 | 18 | 212.8 | 143.8 | 72.2 | 70.4 | −66.9% |
+| **Mean** | | **282.2** | **233.5** | **171.0** | **162.2** | **−42.5%** |
+
+Median great-circle error in km against each animal's own Argos fixes, three
+seeds. *Published* is the frozen 07_05 configuration once two cohort-only bugs
+were repaired; *sigma_v/2* halves the process noise (finding 9); *+SST* adds
+the extended temperature field and the corrected missing-data rule (finding
+10); *+pooled* swaps the single-animal temperature offset for a
+leave-one-animal-out one (finding 11). Seed spreads are in the per-finding
+tables below. † is the only animal ever tuned on.
+
+Two things are worth saying plainly about that column of totals. None of it
+comes from a better estimator - it is a motion-model scale that had been
+fitted on the wrong month, a reference file that covered one deployment window
+out of seven, and a constant averaged over six animals instead of one. And it
+is still not competitive: the external benchmark reaches 118 km on the one
+animal where a comparison exists.
 
 ## Eleven things the audit found
 
