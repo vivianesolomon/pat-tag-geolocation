@@ -1438,6 +1438,159 @@ observable which carries latitude was being withheld from six of seven animals
 by the extent of a downloaded file, and that restoring it is worth more than
 any change I made to the estimator.
 
+\section{Shared Constants, and a Lockbox Too Small to Rule}
+\label{sec:pool}
+Section~\ref{sec:sstcohort} applies constants fitted on 07\_05 to six animals
+that never influenced them. That is a fair zero-shot test, but it is a weak
+claim about a \emph{shared} parameter: one animal is setting a constant for six
+others. This section redoes the two constants that matter leave-one-animal-out,
+and re-opens the lockbox for the corrected temperature rule, because a corrected
+rule is a different filter from the one the lockbox was opened on.
+
+\subsection{Re-opening the lockbox, once}
+The lockbox is the last $30$ days of 07\_05's Argos record and was scored once,
+with the shipped missing-data rule in place (Section~\ref{sec:proto}).
+Section~\ref{sec:sstcohort} showed that rule was wrong. I score the corrected
+rule against the lockbox one further time, with ten seeds, and then not again.
+Nothing in this paper selects on the result.
+
+\begin{table}[t]
+\caption{The lockbox re-scored under the corrected missing-data rule. 07\_05,
+$8{,}000$ particles, ten seeds, median great-circle error in \si{\km}, mean
+$\pm$ standard deviation over seeds. The two arms differ only in what a missing
+reference temperature is allowed to mean.}
+\label{tab:lockbox}
+\centering
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Window & Rule & Fix & Median & Change \\
+\midrule
+Tuning  & shipped   & $91$ & $159.8 \pm 3.0$  &                \\
+        & corrected & $91$ & $144.6 \pm 6.5$  & $2.3\times$ sd \\
+Lockbox & shipped   & $24$ & $281.1 \pm 71.9$ &                \\
+        & corrected & $24$ & $212.1 \pm 81.5$ & $0.8\times$ sd \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:lockbox} gives both windows. On the tuning window, with $91$
+fixes, the median falls from $159.8 \pm 3.0$ to $144.6 \pm 6.5$\,\si{\km}, a
+change of $2.3$ times the larger seed spread. On the lockbox, with $24$ fixes,
+it falls from $281.1 \pm 71.9$ to $212.1 \pm 81.5$\,\si{\km}: nominally
+$-24.6\%$, but only $0.8$ times the larger spread. The improvement is
+measurable on the window where I can measure it and unresolvable on the window
+that was supposed to arbitrate it. Twenty-four fixes are too few to settle a
+change of this size, which is a defect in the held-out set I designed rather
+than in the fix. A held-out set should be sized by the number of scorable
+events it lands on, not by the calendar span it covers.
+
+\subsection{A temperature offset that pools}
+For each animal I set the temperature offset to the mean of the other six
+animals' truth-fitted offsets. The held-out animal contributes nothing to its
+own constant, so unlike the oracle column of Table~\ref{tab:sstcohort} this is a
+quantity I am entitled to quote.
+
+\begin{table}[t]
+\caption{Temperature offset, frozen against pooled against oracle. Median
+great-circle error in \si{\km}, three seeds, everything else held at the frozen
+07\_05 calibration. \emph{Frozen} is 07\_05's offset applied to all seven;
+\emph{release} is each tag's own release-window estimate; \emph{pooled} is the
+mean of the other six animals' truth-fitted offsets, which never sees the
+held-out animal. $^{*}$ is fitted on the animal's own Argos fixes and is an
+upper bound, not a result I am entitled to quote.}
+\label{tab:loo}
+\centering
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Animal & Frozen & Release & Pooled & Oracle$^{*}$ \\
+\midrule
+07\_05 & $159.1 \pm 3.3$  & $155.5 \pm 6.2$  & $141.8 \pm 9.5$  & $150.8 \pm 2.7$  \\
+07\_03 & $401.5 \pm 12.8$ & $390.7 \pm 7.6$  & $388.0 \pm 14.8$ & $400.3 \pm 8.6$  \\
+08\_01 & $80.6 \pm 0.8$   & $67.1 \pm 1.0$   & $78.1 \pm 0.7$   & $77.1 \pm 0.2$   \\
+08\_02 & $107.6 \pm 0.9$  & $115.3 \pm 0.8$  & $104.9 \pm 1.6$  & $109.6 \pm 0.7$  \\
+08\_04 & $176.2 \pm 1.4$  & $215.9 \pm 0.8$  & $159.8 \pm 1.0$  & $152.9 \pm 0.1$  \\
+08\_09 & $199.9 \pm 4.6$  & $207.8 \pm 3.2$  & $192.5 \pm 3.1$  & $177.3 \pm 5.2$  \\
+09\_15 & $72.2 \pm 1.7$   & $100.3 \pm 3.3$  & $70.4 \pm 3.6$   & $72.0 \pm 1.5$   \\
+\midrule
+Mean   & $171.0$ & $176.1$ & $162.2$ & $162.8$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:loo} gives the comparison. The pooled offset beats the frozen
+07\_05 offset on seven animals out of seven (one-sided sign test,
+$p = 0.008$). Per animal the gain is small---the median
+change is $-3.3\%$---but the direction is unanimous, and the cohort mean of the
+per-animal medians falls from $171.0$ to $162.2$\,\si{\km} against
+$162.8$\,\si{\km} for an oracle fitted on each animal's own fixes. Averaging
+six noisy estimates is as good as handing each animal its own answer, which is
+what one expects when the per-animal estimates are dominated by estimation noise
+rather than by real differences between tags. The per-tag release-window
+estimate, which uses no truth at all, is worse than either on average and is the
+only one of the three that is worse than doing nothing on two animals.
+
+\subsection{Process noise does not pool, and the obstacle is the sampler}
+The same treatment applied to the process-noise scale fails, and the failure is
+the more useful of the two results.
+
+\begin{table}[t]
+\caption{Process-noise scale swept across the cohort, median great-circle error
+in \si{\km}, three seeds, pooled temperature offset throughout. $\sigma_v$ is
+multiplied by the scale; $0.50$ is the value adopted in Section~\ref{sec:prior}.
+Six of the seven animals improve monotonically as the scale falls. 07\_05, the
+animal that chose $0.50$, is the exception.}
+\label{tab:scale}
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Animal & $0.25$ & $0.35$ & $0.50$ & $0.70$ & $1.00$ \\
+\midrule
+07\_05 & $727.1$ & $704.9$ & $141.8$ & $142.7$ & $154.3$ \\
+07\_03 & $318.1$ & $379.8$ & $388.0$ & $339.5$ & $406.1$ \\
+08\_01 & $51.7$  & $66.4$  & $78.1$  & $91.2$  & $117.1$ \\
+08\_02 & $71.4$  & $84.4$  & $104.9$ & $129.7$ & $164.8$ \\
+08\_04 & $105.0$ & $129.0$ & $159.8$ & $182.1$ & $217.5$ \\
+08\_09 & $119.0$ & $152.3$ & $192.5$ & $231.1$ & $273.2$ \\
+09\_15 & $59.7$  & $62.9$  & $70.4$  & $128.1$ & $195.9$ \\
+\midrule
+Mean   & $207.4$ & $225.7$ & $162.2$ & $177.8$ & $218.4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scale} sweeps the scale. Six of the seven animals improve
+monotonically as it falls---08\_09 runs from $192.5$ to $119.0$\,\si{\km}
+between $0.50$ and $0.25$---while 07\_05, the animal that set $0.50$ in
+Section~\ref{sec:prior}, collapses instead: $141.8$\,\si{\km} at $0.50$ and
+$704.9$\,\si{\km} at $0.35$. A leave-one-animal-out vote therefore reproduces
+the frozen $0.50$ on six of the seven folds, and on the fold that holds 07\_05
+out the other six vote $0.25$, where 07\_05 scores $727.1$\,\si{\km} against
+$141.8$\,\si{\km} frozen.
+
+A discontinuity of that shape is not a bias--variance trade-off, and the
+standard particle-filter health check does not see it. The effective sample size
+never falls below $4{,}027$ of $8{,}000$ and no step is flagged as collapsed or
+redrawn. The weights stay near-uniform precisely because every particle is
+equally far from the animal: the filter is not degenerate, it is confidently
+wrong. What does move the number is the particle budget. At scale $0.35$, 07\_05
+scores $704.9 \pm 11.1$, $531.5 \pm 80.8$ and $233.7 \pm 60.8$\,\si{\km} at
+$8{,}000$, $32{,}000$ and $128{,}000$ particles, and the trend has not
+flattened.
+
+Sixteen times the budget removes two thirds of the gap and still does not reach
+the $141.8$\,\si{\km} that $0.50$ achieves with $8{,}000$, so I cannot claim
+the tighter process noise wins, and the shipped configuration stays at $0.50$.
+What I can say is that most of the cliff belongs to the sampler rather than to
+the animal, and that the adopted value should be read as the smallest process
+noise this sampler survives on the hardest animal rather than as an estimate of
+how a white shark moves. Every process-noise number in this paper is to that
+extent a statement about compute, and the honest next step is a better
+proposal---a regularised or auxiliary particle filter---before this grid is
+swept again.
+
 \section{Discussion}
 \subsection{What survives}
 A Student-$t$ twilight likelihood is worth about $100$\,\si{\km} and is the
@@ -1459,7 +1612,11 @@ than its seed noise. One process-model parameter does survive on its own
 terms: $\sigma_v$ was fitted on the calibration month, a prior-predictive check
 at the real Argos gaps rejects it at $p<10^{-4}$, and halving it is chosen by
 the tuning window on all four statistics and cuts held-out median error from
-$412$ to $313$\,\si{\km} (Section~\ref{sec:prior}).
+$412$ to $313$\,\si{\km} (Section~\ref{sec:prior}). And one constant survives
+as a genuinely shared parameter: a temperature offset pooled over the other six
+animals beats the frozen single-animal offset on seven of seven, matches an
+oracle fitted on each animal's own fixes, and is chosen without ever seeing the
+animal it is scored on (Section~\ref{sec:pool}).
 
 \subsection{What does not}
 The headline, as a measure of accuracy. The ablation ladder, which was built
@@ -1473,15 +1630,24 @@ knowledge: it produces the largest single held-out gain in the study and is then
 beaten on that same window by a deliberately inverted copy of itself. Across
 seven such priors, how much ocean each one deletes explains the gain
 ($r=+0.951$), and where each one points explains none of it once area is held
-fixed (Section~\ref{sec:prior}).
+fixed (Section~\ref{sec:prior}). And the halved process noise, as a statement
+about animal movement: six of the seven animals prefer a tighter scale than the
+one 07\_05 chose, and 07\_05's refusal to follow them is mostly sampler
+convergence rather than biology (Section~\ref{sec:pool}).
 
 \subsection{Limitations}
 The diagnostic work is one animal, one deployment, and one ground-truth track;
-only the process-noise result of Section~\ref{sec:cohort} and the temperature
-result of Section~\ref{sec:sstcohort} have been tested on more. The lockbox
-contains $20$ matched events, so lockbox medians carry wide intervals --- the
-seed standard deviation alone is $90$\,\si{\km}, and sampling error on $20$
-events is comparable. Nothing here should be read as a general ranking of
+only the process-noise result of Section~\ref{sec:cohort}, the temperature
+result of Section~\ref{sec:sstcohort} and the pooled constants of
+Section~\ref{sec:pool} have been tested on more. The lockbox contains $20$
+matched events for the twilight estimators and $24$ Argos fixes for the
+particle filter, so lockbox medians carry wide intervals --- the seed standard
+deviation alone is $90$\,\si{\km}, and sampling error is comparable. That is
+enough to have shown the headline was a tuning-window number, and not enough to
+adjudicate a $25\%$ change, as Section~\ref{sec:pool} found. Finally, the
+particle budget is itself a limitation rather than a detail: at $8{,}000$
+particles the filter is not converged at the process-noise scales most of the
+cohort prefers, so every process-noise conclusion is conditional on compute. Nothing here should be read as a general ranking of
 nonlinear filters; it is a statement about what this data set can resolve, which
 is less than I originally claimed. The Argos error model for classes 0, A and B
 is assumed rather than known. GPE3 is a black box, so I can say that it
