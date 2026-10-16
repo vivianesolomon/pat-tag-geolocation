@@ -68,16 +68,16 @@ That table is one animal. Here are all seven, with the three interventions
 that survived the audit accumulated left to right. Only 07_05 was ever tuned
 on; for the other six every day is held out.
 
-| Animal | Fixes | Published | sigma_v/2 | +SST | +pooled | Total |
-|---|---:|---:|---:|---:|---:|---:|
-| 07_05† | 115 | 364.4 | 333.4 | 159.1 | 141.8 | −61.1% |
-| 07_03 | 140 | 526.3 | 477.0 | 401.5 | 388.0 | −26.3% |
-| 08_01 | 47 | 166.3 | 130.4 | 80.6 | 78.1 | −53.0% |
-| 08_02 | 102 | 162.7 | 135.9 | 107.6 | 104.9 | −35.5% |
-| 08_04 | 148 | 234.4 | 180.9 | 176.2 | 159.8 | −31.8% |
-| 08_09 | 139 | 308.8 | 233.3 | 199.9 | 192.5 | −37.7% |
-| 09_15 | 18 | 212.8 | 143.8 | 72.2 | 70.4 | −66.9% |
-| **Mean** | | **282.2** | **233.5** | **171.0** | **162.2** | **−42.5%** |
+| Animal | Fixes | Published | sigma_v/2 | +SST | +pooled | Total | GPE3 | Ratio |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 07_05† | 115 | 364.4 | 333.4 | 159.1 | 141.8 | −61.1% | 79.6 | 1.78 |
+| 07_03 | 140 | 526.3 | 477.0 | 401.5 | 388.0 | −26.3% | 51.0 | 7.62 |
+| 08_01 | 47 | 166.3 | 130.4 | 80.6 | 78.1 | −53.0% | 31.2 | 2.51 |
+| 08_02 | 102 | 162.7 | 135.9 | 107.6 | 104.9 | −35.5% | 38.8 | 2.70 |
+| 08_04 | 148 | 234.4 | 180.9 | 176.2 | 159.8 | −31.8% | 62.5 | 2.56 |
+| 08_09 | 139 | 308.8 | 233.3 | 199.9 | 192.5 | −37.7% | 63.0 | 3.06 |
+| 09_15 | 18 | 212.8 | 143.8 | 72.2 | 70.4 | −66.9% | 38.5 | 1.83 |
+| **Mean** | | **282.2** | **233.5** | **171.0** | **162.2** | **−42.5%** | **52.1** | **3.12** |
 
 Median great-circle error in km against each animal's own Argos fixes, three
 seeds. *Published* is the frozen 07_05 configuration once two cohort-only bugs
@@ -85,14 +85,18 @@ were repaired; *sigma_v/2* halves the process noise (finding 9); *+SST* adds
 the extended temperature field and the corrected missing-data rule (finding
 10); *+pooled* swaps the single-animal temperature offset for a
 leave-one-animal-out one (finding 11). Seed spreads are in the per-finding
-tables below. † is the only animal ever tuned on.
+tables below. *GPE3* is the tag maker's smoother, scored by the same code on
+the same fixes, and *Ratio* is +pooled divided by it. † is the only animal
+ever tuned on.
 
 Two things are worth saying plainly about that column of totals. None of it
 comes from a better estimator - it is a motion-model scale that had been
 fitted on the wrong month, a reference file that covered one deployment window
 out of seven, and a constant averaged over six animals instead of one. And it
-is still not competitive: the external benchmark reaches 118 km on the one
-animal where a comparison exists.
+is still not competitive. The archive carries a GPE3 track for every animal,
+so I scored it the same way: it wins on 7 of 7, by factors of 1.8 to 7.6, and
+its cohort mean of per-animal medians is 52.1 km against my 162.2 km. That is
+the gap the animation at the top of this page is showing you.
 
 ## Eleven things the audit found
 
