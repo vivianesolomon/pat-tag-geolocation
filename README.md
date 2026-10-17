@@ -127,6 +127,11 @@ If you read nothing else:
 6. **The proprietary smoother is still ahead, on both windows and on all seven
    animals.** I report it as an external benchmark, not as a target I claim to
    beat.
+7. **A bar set before the run is what makes a negative result usable.** The
+   last experiment weighted every temperature reading by the tag's own vertical
+   profile, with the variance model frozen on one animal and transferred to the
+   other six. It moved the cohort median by 4.4 km against the 15 km bar I had
+   written into the code beforehand, so it is reported and not adopted.
 
 ---
 
