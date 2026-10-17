@@ -1682,6 +1682,80 @@ extent a statement about compute, and the honest next step is a better
 proposal---a regularised or auxiliary particle filter---before this grid is
 swept again.
 
+\subsection{A profile-weighted likelihood, and a bar it did not clear}
+\label{sec:profile}
+
+Section~\ref{sec:sst} established that the tag predicts its own temperature
+error: sorted by the tag's own mixed-layer depth, the residual spread against
+the reference field roughly triples. Section~\ref{sec:sstcohort} nonetheless
+scores every animal with a single shared \SI{0.69}{\celsius}. Closing that gap
+is the one observation-model change Section~\ref{sec:ident} does not block,
+because re-weighting an observation already in hand introduces no latent
+degree of freedom and so cannot buy latitude it has not earned.
+
+I therefore froze the variance model fitted on 07\_05's tuning window and
+asked whether it transfers, unchanged, to six animals it had never seen. Two
+variants were tried: S5 replaces the shared $\sigma$ with
+$\sigma_i = \exp(\ell_0 + \ell_1 z_i)$, where $z_i$ is the standardised
+mixed-layer depth at event $i$ and $(\ell_0, \ell_1)$ are 07\_05's frozen
+coefficients; S6 keeps those $\sigma_i$ and replaces the Gaussian with a
+Student-$t$ at $\nu = 4$. Nothing is fitted per animal. The acceptance bar was
+written into the code before the run---a \SI{15}{\km} improvement in the
+cohort median and the same direction on at least five of seven animals---so
+that a small gain could not be argued into a result afterwards.
+
+\begin{table}[t]
+\caption{A frozen profile-weighted temperature likelihood transferred
+zero-shot to the cohort. Median great-circle error in \si{\km}, mean over
+three seeds, $8{,}000$ particles; seed standard deviations are
+$0.2$--$17.1$\,\si{\km}. S2 is the rule adopted in
+Section~\ref{sec:sstcohort}. 07\_03 carries no mixed-layer product, so it
+keeps the shared $\sigma$ and is unchanged by construction.}
+\label{tab:profile}
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Animal & S2 shared $\sigma$ & S5 profile $\sigma$ & S6 S5 $+$ $t_4$ \\
+\midrule
+07\_05 & $159.1$ & $154.6$ & $188.1$ \\
+07\_03 & $401.5$ & $394.7$ & $417.8$ \\
+08\_01 & $80.6$  & $83.4$  & $86.2$  \\
+08\_02 & $107.6$ & $106.6$ & $108.1$ \\
+08\_04 & $176.2$ & $184.1$ & $179.2$ \\
+08\_09 & $199.9$ & $191.4$ & $202.8$ \\
+09\_15 & $72.2$  & $70.0$  & $88.5$  \\
+\midrule
+Cohort median & $159.1$ & $154.6$ & $179.2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The rule is not a null edit: it asks for event standard deviations between
+$0.50$ and \SI{2.52}{\celsius} in place of a flat $0.69$. It still misses the
+bar. S5 improves the median on five of seven animals and moves the cohort
+median by \SI{4.4}{\km} (Table~\ref{tab:profile}), roughly a quarter of what I
+said I would require, and five of the seven per-animal changes are smaller
+than that animal's own seed spread. The upper tail moves further than the
+centre, which is the direction Section~\ref{sec:sst} predicted and the reason
+four statistics were checked rather than one: the $75$th percentile improves
+on five of seven with a median of \SI{-9.1}{\km}, and on 07\_05 by
+\SI{43.4}{\km}. That is still inside the bar. S6 is worse than S2 on every
+animal and worse by \SI{20.2}{\km} in the cohort median, so down-weighting
+large residuals removes the only term holding latitude in place; the
+temperature channel is not an outlier problem. Both variants are discarded and
+the shipped rule stays S2.
+
+One negative check is worth recording on its own. 07\_03 is the only animal
+with vertical profiles but no mixed-layer product, and the obvious substitute
+is the textbook \SI{0.5}{\celsius} threshold depth computed from its own
+profiles. On the six tags that carry both, that quantity correlates with the
+archive's product at only $0.19$--$0.83$ (median $0.36$) and differs by a
+factor of two in the median on 07\_05. Feeding it into a variance model fitted
+on the other would have looked like a transfer result and been a units error,
+so 07\_03 keeps the shared $\sigma$ instead.
+
+
 \section{Discussion}
 \subsection{What to remember}
 \begin{enumerate}
@@ -1745,7 +1819,7 @@ quantity it was fitted to and tripled the held-out error. The bias-state fix, as
 claim, and in fact as any kind of estimate: Section~\ref{sec:ident} shows the
 parameter was never identifiable from twilight data. And my own selection rule, as
 a sufficient safeguard --- it is clean, and over a wider family it is actively
-anti-correlated with accuracy. And the temperature channel, as a reservoir of further accuracy: Section~\ref{sec:sst} finds a real defect in it --- the satellite analysis has no value at the animal's own position on a fifth of the days the term fires, and the likelihood called those places impossible --- but repairing that defect rotates the error rather than reducing it, and buys nothing that survives smoothing. And the weak habitat prior, as habitat
+anti-correlated with accuracy. And the temperature channel, as a reservoir of further accuracy: Section~\ref{sec:sst} finds a real defect in it --- the satellite analysis has no value at the animal's own position on a fifth of the days the term fires, and the likelihood called those places impossible --- but repairing that defect rotates the error rather than reducing it, and buys nothing that survives smoothing. Weighting the same reading by the tag's own vertical profile, frozen on one animal and transferred to six, moves the cohort median by \SI{4.4}{\km} against a bar of \SI{15}{\km} and is not adopted (Section~\ref{sec:profile}). And the weak habitat prior, as habitat
 knowledge: it produces the largest single held-out gain in the study and is then
 beaten on that same window by a deliberately inverted copy of itself. Across
 seven such priors, how much ocean each one deletes explains the gain
